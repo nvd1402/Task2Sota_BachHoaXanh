@@ -82,6 +82,100 @@
     window.addEventListener('load', toggleBtn);
 })();
 
+// Carousel cho "Sản phẩm nổi bật" (nút + kéo/ vuốt)
+(function() {
+    const track = document.getElementById('featuredTrack');
+    const prevBtn = document.getElementById('featuredPrev');
+    const nextBtn = document.getElementById('featuredNext');
+    if (!track || !prevBtn || !nextBtn) return;
+
+    const container = track.parentElement; // .featured-grid
+
+    const scrollByCards = (direction) => {
+        const cards = track.querySelectorAll('.featured-card');
+        if (!cards.length) return;
+        const cardWidth = cards[0].offsetWidth + 16; // 16 = gap
+        const perView = window.innerWidth >= 992 ? 5 : 2;
+        const delta = cardWidth * perView * direction;
+        track.parentElement.scrollBy({ left: delta, behavior: 'smooth' });
+    };
+
+    prevBtn.addEventListener('click', () => scrollByCards(-1));
+    nextBtn.addEventListener('click', () => scrollByCards(1));
+
+    // Drag với chuột
+    let isMouseDown = false;
+    let startX = 0;
+    let startY = 0;
+    let startScrollLeft = 0;
+
+    container.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        isMouseDown = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startScrollLeft = container.scrollLeft;
+        container.classList.add('dragging');
+        e.preventDefault(); // tránh kéo ảnh
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        // Nếu kéo dọc nhiều hơn thì bỏ, để trang cuộn bình thường
+        if (Math.abs(dy) > Math.abs(dx)) {
+            isMouseDown = false;
+            container.classList.remove('dragging');
+            return;
+        }
+        container.scrollLeft = startScrollLeft - dx;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (!isMouseDown) return;
+        isMouseDown = false;
+        container.classList.remove('dragging');
+    });
+
+    // Vuốt trên điện thoại
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchScrollLeft = 0;
+    let isTouching = false;
+
+    container.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        isTouching = true;
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchScrollLeft = container.scrollLeft;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!isTouching || !e.touches || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+        // Nếu kéo dọc thì trả quyền cho cuộn trang
+        if (Math.abs(dy) > Math.abs(dx)) {
+            isTouching = false;
+            return;
+        }
+        container.scrollLeft = touchScrollLeft - dx;
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+        isTouching = false;
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+        // force reflow to cập nhật cardWidth trên thay đổi kích thước
+        void track.offsetWidth;
+    });
+})();
+
 // Cho phép lướt (swipe) banner carousel trên mobile
 (function() {
     const carouselEl = document.querySelector('#heroCarousel');
