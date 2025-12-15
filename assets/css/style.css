@@ -1,8 +1,736 @@
-/**
- * File CSS tùy chỉnh
- */
-
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
 }
 
+/* FLASH SALE */
+.flash-sale-bar {
+    background: #3da04d;
+    color: #fff;
+    font-size: 14px;
+    padding: 6px 0;
+}
+
+.flash-sale-btn {
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+/* HEADER */
+.header-main {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 0;
+}
+
+.logo {
+    flex-shrink: 0;
+}
+
+.logo img {
+    height: 90px;
+    width: auto;
+}
+
+/* SEARCH */
+.search-box {
+    flex: 1;
+    max-width: 500px;
+    height: 40px;
+    display: flex;
+    margin: 0 auto;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-box input::placeholder {
+    color: #999;
+    font-size: 14px;
+}
+
+.search-box button {
+    background: #3da04d;
+    border: none;
+    padding: 0 16px;
+    color: #fff;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-box button i {
+    font-size: 16px;
+}
+
+/* SUPPORT */
+.support {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.support-icon {
+    width: 40px;
+    height: 40px;
+    background: #3da04d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px;
+}
+
+.support-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.support-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+}
+
+.support-text small {
+    color: #666;
+    font-size: 14px;
+    display: block;
+}
+
+.support-text strong {
+    color: #3da04d;
+    font-size: 16px;
+    font-weight: 800;
+    display: block;
+}
+
+/* CART */
+.cart-btn {
+    background: #3da04d;
+    color: #fff;
+    padding: 7px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    position: relative;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.cart-btn-text {
+    display: inline-block;
+}
+
+/* Cart Icon Button - Ẩn trên desktop */
+.cart-icon-btn {
+    display: none;
+}
+
+.cart-icon-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: red;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    padding: 2px 6px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+}
+
+/* USER */
+.user-btn {
+    width: 40px;
+    height: 40px;
+    background: #3da04d;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.user-btn i {
+    font-size: 20px;
+}
+
+/* MENU */
+.main-nav {
+    background: #3da04d;
+}
+
+.nav-row {
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.category-toggle {
+    background: #2d7a3a;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.category-toggle i {
+    font-size: 18px;
+}
+
+.nav-menu {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.nav-menu li {
+    margin: 0;
+}
+
+.nav-menu li a {
+    color: #e8e4e4;
+    padding: 14px 18px;
+    display: block;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-menu li a:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-menu li a.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: 600;
+}
+
+.nav-menu li a.active:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Floating Contact Icons */
+.floating-icons {
+    position: fixed;
+    right: 20px;
+    bottom: 100px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Ẩn floating icons khi sidebar mở */
+.mobile-menu-sidebar.active ~ .site-footer .floating-icons,
+body:has(.mobile-menu-sidebar.active) .floating-icons {
+    z-index: 9998;
+    opacity: 0.5;
+}
+
+.floating-icon {
+    display: block;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+}
+
+.floating-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.floating-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Footer */
+.site-footer {
+    background: #3da04d;
+    color: #fff;
+    padding: 15px 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+.site-footer p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Mobile Menu Sidebar - Ẩn trên desktop */
+.mobile-menu-sidebar {
+    display: none;
+}
+
+.mobile-menu-close {
+    display: none;
+}
+
+.mobile-menu-search {
+    display: none;
+}
+
+/* PRODUCT CARD */
+.product-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    transition: all 0.3s;
+    position: relative;
+    padding: 15px;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.product-card-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.product-card-body {
+    padding: 0;
+}
+
+.product-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.product-card-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3da04d;
+    margin-bottom: 12px;
+}
+
+.product-card-cart-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: #3da04d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.product-card-cart-icon:hover {
+    background: #2d7a3a;
+    transform: scale(1.1);
+}
+
+.product-card-cart-icon img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+/* RESPONSIVE - MOBILE */
+@media (max-width: 768px) {
+    /* Flash Sale - Ẩn trên mobile */
+    .flash-sale-bar {
+        display: none !important;
+    }
+    
+    /* Header */
+    .header-row {
+        flex-wrap: nowrap;
+        padding: 0 10px;
+        gap: 10px;
+        justify-content: space-between;
+    }
+    
+    .logo {
+        order: 2;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .logo img {
+        height: 90px;
+        width: auto;
+    }
+    
+    /* Mobile Menu Toggle */
+    .mobile-menu-toggle {
+        order: 1;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        border: none;
+        color: #333;
+        font-size: 28px;
+        cursor: pointer;
+        flex-shrink: 0;
+        padding: 0;
+    }
+    
+    .mobile-menu-toggle i {
+        color: #666;
+    }
+    
+    /* Search Box - Ẩn trên mobile */
+    .search-box {
+        display: none !important;
+    }
+    
+    /* Support - Ẩn trên mobile */
+    .support {
+        display: none !important;
+    }
+    
+    /* Cart Button - Ẩn trên mobile */
+    .cart-btn {
+        display: none !important;
+    }
+    
+    /* Cart Icon Button (Mobile only) */
+    .cart-icon-btn {
+        order: 4;
+        width: 35px;
+        height: 35px;
+        background: #3da04d;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    .cart-icon-btn img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+    }
+    
+    .user-btn {
+        order: 3;
+        width: 40px;
+        height: 40px;
+        margin-left: 0;
+        flex-shrink: 0;
+    }
+    
+    .user-btn i {
+        font-size: 20px;
+    }
+    
+    /* Menu Navigation - Ẩn nav bar trên mobile (chỉ hiển thị menu sidebar) */
+    .main-nav {
+        display: none !important;
+    }
+    
+    /* Mobile Menu Sidebar - Chỉ hiển thị trên mobile */
+    .mobile-menu-sidebar {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 66.67%;
+        height: 100vh;
+        background: #fff;
+        z-index: 10000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        overflow-y: auto;
+    }
+    
+    .mobile-menu-sidebar.active {
+        left: 0;
+    }
+    
+    /* Close Button - Ngoài sidebar, góc trên bên phải màn hình */
+    .mobile-menu-close {
+        display: none !important;
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+        padding: 0;
+    }
+    
+    .mobile-menu-close.show {
+        display: flex !important;
+    }
+    
+    .mobile-menu-close:hover {
+        opacity: 0.8;
+    }
+    
+    .mobile-menu-close i {
+        color: #fff;
+    }
+    
+    /* Search Bar trong Menu */
+    .mobile-menu-sidebar .mobile-menu-search {
+        display: flex !important;
+        padding-top: 60px !important;
+        padding-right: 15px !important;
+        padding-bottom: 15px !important;
+        padding-left: 15px !important;
+        gap: 0;
+        margin: 0 !important;
+        box-sizing: border-box;
+        width: auto !important;
+        max-width: calc(100% - 30px);
+    }
+    
+    .mobile-menu-sidebar .mobile-menu-search input {
+        flex: 1;
+        padding-top: 10px !important;
+        padding-right: 15px !important;
+        padding-bottom: 10px !important;
+        padding-left: 15px !important;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+        width: auto;
+        min-width: 150px;
+    }
+    
+    .mobile-menu-sidebar .mobile-menu-search button {
+        background: #3da04d;
+        border: none;
+        padding: 0 18px;
+        color: #fff;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-width: 50px;
+    }
+    
+    .mobile-menu-sidebar .mobile-menu-search button i {
+        font-size: 16px;
+        color: #fff;
+    }
+    
+    /* Nav menu trong sidebar mobile */
+    .mobile-menu-sidebar .nav-menu {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .mobile-menu-sidebar .nav-menu li {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .mobile-menu-sidebar .nav-menu li a {
+        color: #333;
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: left;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .mobile-menu-sidebar .nav-menu li a:hover {
+        background: #f5f5f5;
+        color: #3da04d;
+        padding-left: 25px;
+    }
+    
+    .mobile-menu-sidebar .nav-menu li a.active {
+        color: #3da04d;
+        background: #f0f7f1;
+        font-weight: 600;
+    }
+    
+    .mobile-menu-sidebar .nav-menu li a.active:hover {
+        background: #e8f4ea;
+        padding-left: 20px;
+    }
+    
+    /* Overlay khi menu mở */
+    .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+    
+    .menu-overlay.active {
+        display: block !important;
+    }
+    
+    /* Product Card */
+    .product-card {
+        padding: 12px;
+    }
+    
+    .product-card-img {
+        height: 150px;
+    }
+    
+    .product-card-title {
+        font-size: 14px;
+    }
+    
+    .product-card-price {
+        font-size: 16px;
+    }
+    
+    .product-card-cart-icon {
+        width: 35px;
+        height: 35px;
+        top: 12px;
+        right: 12px;
+    }
+    
+    .product-card-cart-icon img {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        height: 70px;
+    }
+    
+    .cart-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+    
+    .cart-icon-img {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .user-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .flash-sale-bar span {
+        font-size: 11px;
+    }
+    
+    /* Floating Icons - Mobile */
+    .floating-icons {
+        right: 15px;
+        bottom: 80px;
+        gap: 12px;
+    }
+    
+    .floating-icon {
+        width: 50px;
+        height: 50px;
+    }
+}

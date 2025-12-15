@@ -1,7 +1,20 @@
+    <!-- Floating Contact Icons -->
+    <div class="floating-icons">
+        <a href="tel:0906548904" class="floating-icon phone-icon" title="Gọi điện: 0906548904">
+            <img src="assets/images/phone-1.png" alt="Phone">
+        </a>
+        <a href="https://www.facebook.com/nvd.14022005" target="_blank" class="floating-icon mess-icon" title="Messenger">
+            <img src="assets/images/mess.png" alt="Messenger">
+        </a>
+        <a href="https://zalo.me/0906548904" target="_blank" class="floating-icon zalo-icon" title="Zalo: 0906548904">
+            <img src="assets/images/zalo.png" alt="Zalo">
+        </a>
+    </div>
+
     <!-- Footer -->
-    <footer class="bg-dark text-light mt-5 py-4">
+    <footer class="site-footer">
         <div class="container text-center">
-            <p>&copy; <?php echo date('Y'); ?> Bách Hóa Xanh. Tất cả quyền được bảo lưu.</p>
+            <p>Copyright 2025 © WEB THỰC TẬP</p>
         </div>
     </footer>
 
