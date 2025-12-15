@@ -9,6 +9,9 @@
         <a href="https://zalo.me/0906548904" target="_blank" class="floating-icon zalo-icon" title="Zalo: 0906548904">
             <img src="assets/images/zalo.png" alt="Zalo">
         </a>
+        <button type="button" class="floating-icon back-to-top" aria-label="Lên đầu trang">
+            <i class="bi bi-chevron-up"></i>
+        </button>
     </div>
 
     <!-- Footer -->

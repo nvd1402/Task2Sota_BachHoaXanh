@@ -108,8 +108,37 @@ if (empty($currentPage) || $currentPage == '/' || $currentPage == 'index.php') {
             <i class="bi bi-list"></i>
         </button>
         
-        <div class="category-toggle">
-            <i class="bi bi-list"></i> Danh mục sản phẩm
+        <div class="category-wrap">
+            <div class="category-toggle">
+                <i class="bi bi-list"></i> Danh mục sản phẩm
+            </div>
+            <!-- Category dropdown (mock data) -->
+            <div class="category-dropdown">
+                <div class="category-item">
+                    <span>Rau – củ – quả</span>
+                </div>
+                <div class="category-item">
+                    <span>Thịt – cá – trứng</span>
+                </div>
+                <div class="category-item">
+                    <span>Mì – cháo – phở</span>
+                </div>
+                <div class="category-item">
+                    <span>Đồ uống các loại</span>
+                </div>
+                <div class="category-item">
+                    <span>Dầu ăn – Gia vị</span>
+                </div>
+                <div class="category-item">
+                    <span>Đồ đông lạnh</span>
+                </div>
+                <div class="category-item">
+                    <span>Thực phẩm chế biến</span>
+                </div>
+                <div class="category-item">
+                    <span>Thực phẩm Tết</span>
+                </div>
+            </div>
         </div>
         
         <ul class="nav-menu">
@@ -159,7 +188,9 @@ function toggleMobileMenu() {
         sidebar.classList.toggle('active');
         overlay.classList.toggle('active');
         closeBtn.classList.toggle('show');
-        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+        const open = sidebar.classList.contains('active');
+        document.body.style.overflow = open ? 'hidden' : '';
+        document.body.classList.toggle('mobile-menu-open', open);
     }
 }
 
@@ -172,6 +203,7 @@ function closeMobileMenu() {
         overlay.classList.remove('active');
         closeBtn.classList.remove('show');
         document.body.style.overflow = '';
+        document.body.classList.remove('mobile-menu-open');
     }
 }
 </script>

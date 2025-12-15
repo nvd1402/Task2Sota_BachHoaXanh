@@ -5,9 +5,34 @@ $pageTitle = "Trang chủ - Bách Hóa Xanh";
 include 'includes/header.php';
 ?>
 
-<div class="container my-5">
-    <h1 class="text-center">Chào mừng đến với Bách Hóa Xanh</h1>
-    <p class="text-center text-muted">Bắt đầu code tại đây...</p>
+<!-- Banner Carousel -->
+<div class="hero-carousel my-4">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="assets/images/banner1.jpg" class="d-block w-100" alt="Banner 1">
+            </div>
+            <div class="carousel-item">
+                <img src="assets/images/banner3.jpg" class="d-block w-100" alt="Banner 3">
+            </div>
+            <div class="carousel-item">
+                <img src="assets/images/banner4.jpg" class="d-block w-100" alt="Banner 4">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
 </div>
 
 <!-- Newsletter Section -->
