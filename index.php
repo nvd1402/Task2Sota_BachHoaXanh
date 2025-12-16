@@ -91,6 +91,111 @@ include 'includes/header.php';
     </div>
 </section>
 
+<!-- ===== DANH MỤC RAU – CỦ – QUẢ ===== -->
+<section class="category-block">
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="category-block-header">
+            <div class="left">
+                <img src="assets/images/icon_ns.png" alt="Icon">
+                <h3>RAU – CỦ – QUẢ</h3>
+            </div>
+            <div class="right">
+                <a href="#">Rau</a>
+                <a href="#">Củ</a>
+                <a href="#">Quả</a>
+                <a href="#" class="view-all">Xem tất cả ›</a>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="category-block-body">
+
+            <!-- BANNER TRÁI -->
+            <div class="category-banner">
+                <img src="assets/images/banner_prduct3.png" alt="Banner trái cây">
+            </div>
+
+            <!-- GRID SẢN PHẨM -->
+            <div class="category-products">
+                <?php
+                $products = [
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'90,000₫ – 130,000₫','sale'=>'19%','img'=>'1.jpg'],
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'90,000₫ – 130,000₫','sale'=>'19%','img'=>'2.jpg'],
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'4.jpg'],
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'5.jpg'],
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'1.jpg'],
+                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'2.jpg'],
+                ];
+
+                foreach ($products as $p):
+                    ?>
+                    <div class="product-item">
+                        <div class="product-thumb">
+                            <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
+                            <span class="sale-text">-<?= $p['sale'] ?></span>
+                            <img src="assets/images/<?= $p['img'] ?>" class="product-img" alt="<?= $p['name'] ?>">
+                        </div>
+                        <p class="product-name"><?= $p['name'] ?></p>
+                        <p class="product-price"><?= $p['price'] ?></p>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===== TIN TỨC ===== -->
+<section class="news-block">
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="news-header">
+            <div class="left">
+                <img src="assets/images/icon_ns.png" alt="Icon">
+                <h3>TIN TỨC</h3>
+            </div>
+            <div class="right">
+                <button class="news-nav prev" id="newsPrev">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="news-nav next" id="newsNext">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CAROUSEL -->
+        <div class="news-carousel">
+            <div class="news-track" id="newsTrack">
+                <?php
+                $news = [
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
+                ];
+
+                foreach ($news as $n):
+                    ?>
+                    <div class="news-card">
+                        <div class="news-thumb">
+                            <img src="assets/images/lesterblur__2.jpg" alt="<?= $n['title'] ?>">
+                        </div>
+                        <h4 class="news-title"><?= $n['title'] ?></h4>
+                        <p class="news-date"><?= $n['date'] ?></p>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+    </div>
+</section>
+
 <!-- Newsletter Section -->
 <section class="newsletter-section">
     <div class="newsletter-overlay"></div>

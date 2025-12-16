@@ -280,9 +280,11 @@
     const dropdown = document.querySelector('.category-dropdown');
     if (!toggle || !dropdown) return;
 
+    const isHome = document.body.classList.contains('page-index'); // chỉ auto mở trên trang chủ
     const isDesktop = () => window.innerWidth >= 992; // ẩn trên mobile theo CSS
 
     const syncByScroll = () => {
+        if (!isHome) return; // các trang khác không tự xổ danh mục
         if (!isDesktop()) {
             dropdown.classList.remove('show');
             return;
@@ -296,8 +298,46 @@
     };
 
     // Mặc định mở khi load (desktop)
-    window.addEventListener('load', syncByScroll);
-    window.addEventListener('scroll', syncByScroll, { passive: true });
-    window.addEventListener('resize', syncByScroll);
+    if (isHome) {
+        window.addEventListener('load', syncByScroll);
+        window.addEventListener('scroll', syncByScroll, { passive: true });
+        window.addEventListener('resize', syncByScroll);
+    }
 })();
 
+(function () {
+    const track = document.getElementById('newsTrack');
+    const prevBtn = document.getElementById('newsPrev');
+    const nextBtn = document.getElementById('newsNext');
+
+    if (!track || !prevBtn || !nextBtn) return;
+
+    let index = 0;
+    const GAP = 24;
+
+    function getCardWidth() {
+        if (!track.children.length) return 0;
+        return track.children[0].offsetWidth + GAP;
+    }
+
+    function updatePosition() {
+        track.style.transform = `translateX(-${index * getCardWidth()}px)`;
+    }
+
+    prevBtn.addEventListener('click', function () {
+        index = Math.max(index - 1, 0);
+        updatePosition();
+    });
+
+    nextBtn.addEventListener('click', function () {
+        const maxIndex = track.children.length - 1;
+        index = Math.min(index + 1, maxIndex);
+        updatePosition();
+    });
+
+    // Reset khi resize để không lệch layout responsive
+    window.addEventListener('resize', function () {
+        index = 0;
+        updatePosition();
+    });
+})();

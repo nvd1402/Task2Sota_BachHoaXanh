@@ -34,7 +34,10 @@ if (empty($currentPage) || $currentPage == '/' || $currentPage == 'index.php') {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
+<?php
+$bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
+?>
+<body class="<?= htmlspecialchars($bodyClass) ?>">
 
 <!-- FLASH SALE -->
 <div class="flash-sale-bar">
