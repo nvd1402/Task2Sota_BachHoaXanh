@@ -4,6 +4,195 @@
 
 // Code JavaScript tại đây
 
+// Related Articles Carousel (News Detail Page)
+(function() {
+    const carouselWrapper = document.querySelector('.related-carousel-wrapper');
+    if (!carouselWrapper) return;
+    
+    const container = carouselWrapper.querySelector('.related-carousel-container');
+    const track = carouselWrapper.querySelector('.related-carousel-track');
+    const prevBtn = carouselWrapper.querySelector('.related-prev');
+    const nextBtn = carouselWrapper.querySelector('.related-next');
+    const cards = carouselWrapper.querySelectorAll('.related-article-card');
+    
+    if (!container || !track || !prevBtn || !nextBtn || cards.length === 0) return;
+    
+    let currentIndex = 0;
+    const cardsPerView = 3;
+    
+    const getCardWidth = () => {
+        if (cards.length === 0) return 0;
+        const containerWidth = container.offsetWidth;
+        const gap = 24;
+        const totalGaps = (cardsPerView - 1) * gap;
+        return (containerWidth - totalGaps) / cardsPerView;
+    };
+    
+    const scrollByCards = (direction) => {
+        const totalCards = cards.length;
+        const maxIndex = Math.max(0, totalCards - cardsPerView);
+        
+        if (direction === 'next') {
+            currentIndex = Math.min(currentIndex + cardsPerView, maxIndex);
+        } else {
+            currentIndex = Math.max(currentIndex - cardsPerView, 0);
+        }
+        
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        const translateX = currentIndex * (cardWidth + gap);
+        
+        track.style.transform = `translateX(-${translateX}px)`;
+    };
+    
+    prevBtn.addEventListener('click', () => scrollByCards('prev'));
+    nextBtn.addEventListener('click', () => scrollByCards('next'));
+    
+    // Drag/Swipe functionality
+    let isDown = false;
+    let startX = 0;
+    let startTranslateX = 0;
+    
+    const handleMouseDown = (e) => {
+        isDown = true;
+        startX = e.pageX;
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        startTranslateX = currentIndex * (cardWidth + gap);
+        track.style.cursor = 'grabbing';
+        track.style.transition = 'none';
+    };
+    
+    const handleMouseLeave = () => {
+        if (isDown) {
+            isDown = false;
+            track.style.cursor = 'grab';
+            track.style.transition = 'transform 0.3s ease';
+            // Snap to nearest position
+            const cardWidth = getCardWidth();
+            const gap = 24;
+            const currentTranslateX = parseFloat(track.style.transform.replace('translateX(-', '').replace('px)', '')) || 0;
+            currentIndex = Math.round(currentTranslateX / (cardWidth + gap));
+            const maxIndex = Math.max(0, cards.length - cardsPerView);
+            currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
+            track.style.transform = `translateX(-${currentIndex * (cardWidth + gap)}px)`;
+        }
+    };
+    
+    const handleMouseUp = () => {
+        if (isDown) {
+            isDown = false;
+            track.style.cursor = 'grab';
+            track.style.transition = 'transform 0.3s ease';
+            // Snap to nearest position
+            const cardWidth = getCardWidth();
+            const gap = 24;
+            const currentTranslateX = parseFloat(track.style.transform.replace('translateX(-', '').replace('px)', '')) || 0;
+            currentIndex = Math.round(currentTranslateX / (cardWidth + gap));
+            const maxIndex = Math.max(0, cards.length - cardsPerView);
+            currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
+            track.style.transform = `translateX(-${currentIndex * (cardWidth + gap)}px)`;
+        }
+    };
+    
+    const handleMouseMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - track.offsetLeft;
+        const walk = (x - startX) * 2;
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        const newTranslateX = (currentIndex * (cardWidth + gap)) - walk;
+        const maxTranslateX = Math.max(0, (cards.length - cardsPerView) * (cardWidth + gap));
+        const clampedTranslateX = Math.max(0, Math.min(newTranslateX, maxTranslateX));
+        track.style.transform = `translateX(-${clampedTranslateX}px)`;
+    };
+    
+    // Touch events
+    let touchStartX = 0;
+    let touchStartTranslateX = 0;
+    
+    const handleTouchStart = (e) => {
+        touchStartX = e.touches[0].pageX;
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        touchStartTranslateX = currentIndex * (cardWidth + gap);
+    };
+    
+    const handleTouchMove = (e) => {
+        if (!touchStartX) return;
+        const x = e.touches[0].pageX;
+        const walk = (touchStartX - x) * 2;
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        const newTranslateX = touchStartTranslateX + walk;
+        const maxTranslateX = Math.max(0, (cards.length - cardsPerView) * (cardWidth + gap));
+        const clampedTranslateX = Math.max(0, Math.min(newTranslateX, maxTranslateX));
+        track.style.transform = `translateX(-${clampedTranslateX}px)`;
+    };
+    
+    const handleTouchEnd = () => {
+        if (!touchStartX) return;
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        const currentTranslateX = parseFloat(track.style.transform.replace('translateX(-', '').replace('px)', '')) || 0;
+        currentIndex = Math.round(currentTranslateX / (cardWidth + gap));
+        const maxIndex = Math.max(0, cards.length - cardsPerView);
+        currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
+        track.style.transform = `translateX(-${currentIndex * (cardWidth + gap)}px)`;
+        touchStartX = 0;
+    };
+    
+    // Prevent image dragging
+    const images = track.querySelectorAll('img');
+    images.forEach(img => {
+        img.addEventListener('dragstart', (e) => e.preventDefault());
+        img.addEventListener('mousedown', (e) => e.preventDefault());
+        img.style.userSelect = 'none';
+        img.style.webkitUserDrag = 'none';
+    });
+    
+    // Desktop mouse events
+    track.addEventListener('mousedown', handleMouseDown);
+    track.addEventListener('mouseleave', handleMouseLeave);
+    track.addEventListener('mouseup', handleMouseUp);
+    track.addEventListener('mousemove', handleMouseMove);
+    
+    // Touch events
+    track.addEventListener('touchstart', handleTouchStart, { passive: true });
+    track.addEventListener('touchmove', handleTouchMove, { passive: true });
+    track.addEventListener('touchend', handleTouchEnd);
+    
+    track.style.cursor = 'grab';
+    
+    // Initialize: ensure 3 cards are visible
+    const initCarousel = () => {
+        const cardWidth = getCardWidth();
+        const gap = 24;
+        // Force cards to have correct width
+        cards.forEach(card => {
+            card.style.width = `${cardWidth}px`;
+            card.style.minWidth = `${cardWidth}px`;
+            card.style.maxWidth = `${cardWidth}px`;
+        });
+        track.style.transform = `translateX(-${currentIndex * (cardWidth + gap)}px)`;
+    };
+    
+    // Initialize on load
+    window.addEventListener('load', initCarousel);
+    // Also initialize immediately
+    setTimeout(initCarousel, 100);
+    
+    // Update on resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            initCarousel();
+        }, 250);
+    });
+})();
+
 // Hiển thị header + nav khi cuộn xuống một chút
 (function() {
     const toggleSticky = () => {
