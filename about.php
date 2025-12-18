@@ -4,15 +4,6 @@ $pageTitle = "Giới thiệu - Bách Hóa Xanh";
 include 'includes/header.php';
 ?>
 
-<!-- ===== HERO GIỚI THIỆU ===== -->
-<section class="about-hero" style="background-image:url('assets/images/banner3.jpg')">
-    <div class="about-hero-overlay"></div>
-    <div class="container">
-        <h1>Trang giới thiệu</h1>
-        <p>Trang chủ / <span>Giới thiệu</span></p>
-    </div>
-</section>
-
 <!-- ===== NỘI DUNG ===== -->
 <main class="about-wrapper">
     <div class="container">
@@ -57,3 +48,4 @@ include 'includes/header.php';
 </main>
 
 <?php include 'includes/footer.php'; ?>
+

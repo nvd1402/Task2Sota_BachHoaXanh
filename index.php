@@ -68,16 +68,17 @@ include 'includes/header.php';
                 ['name' => 'Sữa chua trái cây', 'price' => '60,000₫ – 90,000₫', 'off' => '14%', 'img' => 'assets/images/2.jpg'],
             ];
             foreach ($featured as $item): ?>
-                <div class="featured-card">
+                <a href="product-detail.php" class="featured-card">
                     <div class="featured-thumb">
-                        <div class="badge-off">-<?= htmlspecialchars($item['off']) ?></div>
-                        <img src="<?= htmlspecialchars($item['img']) ?>" alt="<?= htmlspecialchars($item['name']) ?>">
+                        <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
+                        <span class="sale-text">-<?= htmlspecialchars($item['off']) ?></span>
+                        <img src="<?= htmlspecialchars($item['img']) ?>" class="featured-product-img" alt="<?= htmlspecialchars($item['name']) ?>">
                     </div>
                     <div class="featured-body">
                         <p class="featured-name"><?= htmlspecialchars($item['name']) ?></p>
                         <p class="featured-price"><?= htmlspecialchars($item['price']) ?></p>
                     </div>
-                </div>
+                </a>
             <?php endforeach; ?>
             </div>
         </div>
@@ -131,7 +132,7 @@ include 'includes/header.php';
 
                 foreach ($products as $p):
                     ?>
-                    <div class="product-item">
+                    <a href="product-detail.php" class="product-item">
                         <div class="product-thumb">
                             <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
                             <span class="sale-text">-<?= $p['sale'] ?></span>
@@ -139,7 +140,7 @@ include 'includes/header.php';
                         </div>
                         <p class="product-name"><?= $p['name'] ?></p>
                         <p class="product-price"><?= $p['price'] ?></p>
-                    </div>
+                    </a>
                 <?php endforeach; ?>
             </div>
 

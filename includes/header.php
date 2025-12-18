@@ -155,6 +155,35 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
     </div>
 </nav>
 
+<!-- Breadcrumb Banner - Chỉ hiển thị khi không phải trang chủ -->
+<?php if ($currentPage != 'index.php'): 
+    // Mapping tên trang (tiêu đề và breadcrumb)
+    $pageTitles = [
+        'about.php' => 'GIỚI THIỆU',
+        'products.php' => 'SẢN PHẨM',
+        'recruitment.php' => 'TUYỂN DỤNG',
+        'news.php' => 'TIN TỨC',
+        'contact.php' => 'LIÊN HỆ'
+    ];
+    $pageNames = [
+        'about.php' => 'Giới thiệu',
+        'products.php' => 'Sản phẩm',
+        'recruitment.php' => 'Tuyển dụng',
+        'news.php' => 'Tin tức',
+        'contact.php' => 'Liên hệ'
+    ];
+    $currentPageTitle = $pageTitles[$currentPage] ?? 'TRANG';
+    $currentPageName = $pageNames[$currentPage] ?? 'Trang';
+?>
+<div class="breadcrumb-banner">
+    <div class="breadcrumb-overlay"></div>
+    <div class="container">
+        <h1 class="breadcrumb-title"><?= htmlspecialchars($currentPageTitle) ?></h1>
+        <p class="breadcrumb-path">Trang chủ / <span><?= htmlspecialchars($currentPageName) ?></span></p>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Overlay -->
 <div class="menu-overlay" onclick="closeMobileMenu()"></div>
 
