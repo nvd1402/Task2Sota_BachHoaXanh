@@ -4255,3 +4255,617 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     }
 }
 
+/* =========================================================
+   LOGIN & RESET PASSWORD – FINAL CSS
+========================================================= */
+
+.login-page {
+    padding: 50px 0 80px;
+    background: #fff;
+}
+
+.login-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* =========================
+   PAGE TITLE
+========================= */
+.login-page-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    margin-bottom: 60px;
+    color: #444;
+}
+
+/* =========================
+   LOGIN SECTION
+========================= */
+.login-section {
+    max-width: 100%;
+    padding: 0;
+    border: none;
+}
+
+/* Heading (LOGIN) */
+.login-heading {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+    color: #333;
+    text-transform: uppercase;
+}
+
+/* =========================
+   FORM BASE
+========================= */
+.login-form,
+.reset-password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.login-form .form-group,
+.reset-password-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* =========================
+   LABEL & INPUT
+========================= */
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-input {
+    width: 100%;
+    height: 48px;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    color: #333;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #7bbf6a;
+}
+
+/* =================================================
+   🔥 FORCE FIX CHECKBOX – NEVER CENTER
+================================================= */
+.login-form .form-group.checkbox-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+.login-form .form-group.checkbox-group input[type="checkbox"] {
+    margin: 0 8px 0 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 auto !important;
+    accent-color: #4CAF50;
+}
+
+.login-form .form-group.checkbox-group label {
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #333 !important;
+    line-height: 1 !important;
+    cursor: pointer;
+}
+
+/* =========================
+   LOGIN BUTTON
+========================= */
+.login-submit-btn {
+    align-self: flex-start;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.login-submit-btn:hover {
+    background: #43a047;
+}
+
+/* =========================
+   LOST PASSWORD LINK
+========================= */
+.lost-password-link {
+    margin-top: 10px;
+}
+
+.lost-password {
+    font-size: 14px;
+    color: #1e73be;
+    text-decoration: none;
+}
+
+.lost-password:hover {
+    text-decoration: underline;
+}
+
+/* =================================================
+   RESET PASSWORD SECTION
+================================================= */
+.lost-password-section {
+    max-width: 700px;
+    margin-top: 30px;
+}
+
+.lost-password-instruction {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* Reset password button */
+.reset-password-btn {
+    align-self: flex-start;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.reset-password-btn:hover {
+    background: #43a047;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+    .login-page-title {
+        font-size: 26px;
+        margin-bottom: 40px;
+    }
+
+    .login-submit-btn,
+    .reset-password-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+/* ================= MAP ================= */
+.map-container {
+    width: 100%;
+    height: 420px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: 300px;
+    }
+}
+
+/* ================= CONTACT ================= */
+.contact-content {
+    display: flex;
+    gap: 30px;
+    margin: 50px 0;
+}
+
+.contact-info-col,
+.contact-form-col {
+    flex: 1;
+}
+
+.contact-heading {
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.contact-intro {
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.contact-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.contact-icon {
+    color: #1b9c3f;
+    font-size: 18px;
+}
+
+.contact-badge {
+    margin-top: 20px;
+    color: #1b9c3f;
+    font-weight: 600;
+}
+
+.contact-form .form-control {
+    margin-bottom: 15px;
+    padding: 10px;
+}
+
+.contact-submit-btn {
+    width: 100%;
+    background: #1b9c3f;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .contact-content {
+        flex-direction: column;
+    }
+}
+/* =========================
+   CART PAGE
+========================= */
+
+.cart-page {
+    padding: 30px 0 60px;
+    background: #fff;
+}
+
+/* =========================
+   BREADCRUMB
+========================= */
+.cart-breadcrumb {
+    background: #fafafa;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.breadcrumb-content {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.breadcrumb-current {
+    font-weight: 700;
+    color: #000;
+}
+
+.breadcrumb-next {
+    color: #bbb;
+}
+
+.breadcrumb-separator {
+    color: #bbb;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 40px;
+    margin-top: 40px;
+}
+
+/* =========================
+   TABLE HEADER
+========================= */
+.cart-table-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 140px 120px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #eee;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+.cart-col-price,
+.cart-col-quantity,
+.cart-col-subtotal {
+    text-align: center;
+}
+
+/* =========================
+   CART ITEM
+========================= */
+.cart-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 140px 120px;
+    align-items: center;
+    padding: 25px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-remove-btn {
+    border: none;
+    background: none;
+    font-size: 18px;
+    color: #bbb;
+    cursor: pointer;
+}
+
+.cart-remove-btn:hover {
+    color: #e53935;
+}
+
+.cart-item-image {
+    width: 80px;
+    height: 80px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-item-name {
+    font-size: 14px;
+    color: #222;
+    line-height: 1.5;
+}
+
+.cart-item-price,
+.cart-item-subtotal {
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* =========================
+   QUANTITY
+========================= */
+.cart-item-quantity {
+    display: flex;
+    justify-content: center;
+}
+
+.qty-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.qty-btn:hover {
+    background: #3da04d;
+    color: #fff;
+    border-color: #3da04d;
+}
+
+.qty-input {
+    width: 40px;
+    height: 34px;
+    border: 1px solid #ddd;
+    border-left: none;
+    border-right: none;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* =========================
+   CART ACTIONS
+========================= */
+.cart-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-continue-shopping {
+    padding: 12px 24px;
+    border: 2px solid #3da04d;
+    background: #fff;
+    color: #3da04d;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-continue-shopping:hover {
+    background: #3da04d;
+    color: #fff;
+}
+
+.btn-update-cart {
+    padding: 12px 24px;
+    border: none;
+    background: #9ccc65;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-update-cart:hover {
+    background: #8bc34a;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.cart-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* =========================
+   CART TOTALS
+========================= */
+.cart-totals-box {
+    border: 2px solid #ddd;
+    padding: 25px;
+}
+
+.cart-totals-title {
+    font-size: 16px;
+    font-weight: 700;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.cart-totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-totals-row:last-child {
+    border-bottom: none;
+}
+
+.totals-value {
+    font-weight: 600;
+}
+
+.totals-total {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.btn-proceed-checkout {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: #d8744b;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.btn-proceed-checkout:hover {
+    background: #c8643f;
+}
+
+/* =========================
+   COUPON
+========================= */
+.cart-coupon-box {
+    border: 1px solid #ddd;
+    padding: 25px;
+}
+
+.coupon-title {
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.coupon-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.coupon-input {
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+.btn-apply-coupon {
+    padding: 12px;
+    border: 1px solid #ddd;
+    background: #f7f7f7;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-apply-coupon:hover {
+    background: #eee;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 991px) {
+    .cart-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cart-sidebar {
+        order: -1;
+    }
+
+    .cart-table-header {
+        display: none;
+    }
+
+    .cart-item {
+        grid-template-columns: auto 1fr;
+        gap: 15px;
+        padding: 20px;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+
+    .cart-item-price::before {
+        content: "Giá: ";
+        font-weight: normal;
+    }
+
+    .cart-item-subtotal::before {
+        content: "Tổng: ";
+        font-weight: normal;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-actions {
+        flex-direction: column;
+    }
+
+    .btn-continue-shopping,
+    .btn-update-cart {
+        width: 100%;
+        text-align: center;
+    }
+}
