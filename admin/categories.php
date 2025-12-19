@@ -1,11 +1,59 @@
 <?php
 session_start();
 require_once '../includes/auth.php';
+require_once '../config/database.php';
 
-// Kiểm tra quyền admin
+// Chỉ cho admin
 requireAdmin();
 
-$pageTitle = "Admin Dashboard - Bách Hóa Xanh";
+$pageTitle = "Quản lý Danh mục - Admin Dashboard";
+
+// Lọc, phân trang
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$perPage = 10;
+$offset  = ($page - 1) * $perPage;
+
+$conn = connectDB();
+
+$where = '';
+$params = [];
+$types  = '';
+if ($search !== '') {
+    $where = "WHERE name LIKE ? OR slug LIKE ?";
+    $term = "%{$search}%";
+    $params = [$term, $term];
+    $types  = 'ss';
+}
+
+// Tổng số
+$countSql = "SELECT COUNT(*) AS total FROM categories $where";
+$countStmt = $conn->prepare($countSql);
+if ($params) {
+    $countStmt->bind_param($types, ...$params);
+}
+$countStmt->execute();
+$totalCategories = $countStmt->get_result()->fetch_assoc()['total'] ?? 0;
+$countStmt->close();
+
+$totalPages = max(1, ceil($totalCategories / $perPage));
+
+// Danh sách
+$sql = "SELECT * FROM categories $where ORDER BY created_at DESC LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($sql);
+if ($params) {
+    $stmt->bind_param($types . 'ii', ...array_merge($params, [$perPage, $offset]));
+} else {
+    $stmt->bind_param('ii', $perPage, $offset);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+$categories = [];
+while ($row = $result->fetch_assoc()) {
+    $categories[] = $row;
+}
+$stmt->close();
+closeDB($conn);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -25,7 +73,6 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
 </head>
-
 <body class="g-sidenav-show bg-gray-100">
   <!-- Sidebar -->
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3" id="sidenav-main">
@@ -40,7 +87,7 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
     <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link active" href="index.php">
+          <a class="nav-link" href="index.php">
             <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
               <svg width="12px" height="12px" viewBox="0 0 45 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>shop</title>
@@ -68,7 +115,7 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="categories.php">
+          <a class="nav-link active" href="categories.php">
             <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-tag text-dark text-sm opacity-10"></i>
             </div>
@@ -122,7 +169,7 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
     </div>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main content -->
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
     <!-- Navbar -->
     <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" navbar-scroll="true">
@@ -130,29 +177,14 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="index.php">Trang</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Danh mục</li>
           </ol>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-            <div class="input-group">
-              <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-              <input type="text" class="form-control" placeholder="Tìm kiếm...">
-            </div>
-          </div>
           <ul class="navbar-nav justify-content-end">
             <li class="nav-item d-flex align-items-center">
               <a href="javascript:;" class="nav-link text-body font-weight-bold px-0">
                 <i class="fa fa-user me-sm-1"></i>
-              </a>
-            </li>
-            <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-              <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
-                <div class="sidenav-toggler-inner">
-                  <i class="sidenav-toggler-line"></i>
-                  <i class="sidenav-toggler-line"></i>
-                  <i class="sidenav-toggler-line"></i>
-                </div>
               </a>
             </li>
           </ul>
@@ -162,174 +194,96 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
     <!-- End Navbar -->
 
     <div class="container-fluid py-4">
-      <!-- Statistics Cards -->
-      <div class="row">
-        <div class="col-lg-3 col-md-6 col-12 mb-4">
-          <div class="card">
-            <span class="mask bg-gradient-primary opacity-10 border-radius-lg"></span>
-            <div class="card-body p-3 position-relative">
-              <div class="row">
-                <div class="col-8 text-start">
-                  <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                    <i class="ni ni-circle-08 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
-                  </div>
-                  <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data - replace with actual database query
-                    echo number_format(1600);
-                    ?>
-                  </h5>
-                  <span class="text-white text-sm">Người dùng hoạt động</span>
-                </div>
-                <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+55%</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- Header -->
+      <div class="row mb-4">
+        <div class="col-lg-6 col-md-6 col-12">
+          <h5 class="mb-0">Danh sách Danh mục</h5>
+          <p class="text-sm text-muted mb-0">Tổng cộng: <?= number_format($totalCategories) ?> danh mục</p>
         </div>
-        <div class="col-lg-3 col-md-6 col-12 mb-4">
-          <div class="card">
-            <span class="mask bg-gradient-dark opacity-10 border-radius-lg"></span>
-            <div class="card-body p-3 position-relative">
-              <div class="row">
-                <div class="col-8 text-start">
-                  <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                    <i class="ni ni-cart text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
-                  </div>
-                  <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(2300);
-                    ?>
-                  </h5>
-                  <span class="text-white text-sm">Đơn hàng</span>
-                </div>
-                <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+15%</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="col-lg-6 col-md-6 col-12 text-end">
+          <a href="category_add.php" class="btn btn-sm mb-0" style="background-color:#000;border-color:#000;color:#fff;">
+            <i class="fas fa-plus me-2"></i>Thêm danh mục mới
+          </a>
         </div>
-        <div class="col-lg-3 col-md-6 col-12 mb-4">
+      </div>
+
+      <!-- Tìm kiếm -->
+      <div class="row mb-4">
+        <div class="col-12">
           <div class="card">
-            <span class="mask bg-gradient-success opacity-10 border-radius-lg"></span>
-            <div class="card-body p-3 position-relative">
-              <div class="row">
-                <div class="col-8 text-start">
-                  <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                    <i class="ni ni-box-2 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
-                  </div>
-                  <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(850);
-                    ?>
-                  </h5>
-                  <span class="text-white text-sm">Sản phẩm</span>
+            <div class="card-body">
+              <form method="GET" action="categories.php" class="row g-3">
+                <div class="col-md-10">
+                  <input type="text" name="search" class="form-control" placeholder="Tìm theo tên hoặc slug..." value="<?= htmlspecialchars($search) ?>">
                 </div>
-                <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+12%</p>
+                <div class="col-md-2">
+                  <button type="submit" class="btn w-100" style="background-color:#000;border-color:#000;color:#fff;">
+                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                  </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6 col-12 mb-4">
-          <div class="card">
-            <span class="mask bg-gradient-info opacity-10 border-radius-lg"></span>
-            <div class="card-body p-3 position-relative">
-              <div class="row">
-                <div class="col-8 text-start">
-                  <div class="icon icon-shape bg-white shadow text-center border-radius-2xl">
-                    <i class="ni ni-money-coins text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
-                  </div>
-                  <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(125000000, 0, ',', '.') . '₫';
-                    ?>
-                  </h5>
-                  <span class="text-white text-sm">Doanh thu</span>
-                </div>
-                <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+24%</p>
-                </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Recent Orders Table -->
-      <div class="row mt-4">
-        <div class="col-lg-12">
+      <!-- Bảng danh mục -->
+      <div class="row">
+        <div class="col-12">
           <div class="card">
-            <div class="card-header pb-0">
-              <div class="row">
-                <div class="col-lg-6 col-7">
-                  <h6>Đơn hàng gần đây</h6>
-                  <p class="text-sm mb-0">
-                    <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">30 đơn</span> trong tháng này
-                  </p>
-                </div>
-              </div>
-            </div>
             <div class="card-body px-0 pb-2">
               <div class="table-responsive">
                 <table class="table align-items-center mb-0">
                   <thead>
                     <tr>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Mã đơn</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Khách hàng</th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tổng tiền</th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Trạng thái</th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Ngày đặt</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tên danh mục</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Slug</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Mô tả</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Trạng thái</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <?php
-                    // Mock data - replace with actual database query
-                    $orders = [
-                      ['id' => '#1079', 'customer' => 'Nguyễn Văn A', 'total' => 130000, 'status' => 'Đã giao', 'date' => '19/12/2025'],
-                      ['id' => '#1080', 'customer' => 'Trần Thị B', 'total' => 250000, 'status' => 'Đang giao', 'date' => '19/12/2025'],
-                      ['id' => '#1081', 'customer' => 'Lê Văn C', 'total' => 180000, 'status' => 'Chờ xử lý', 'date' => '18/12/2025'],
-                      ['id' => '#1082', 'customer' => 'Phạm Thị D', 'total' => 320000, 'status' => 'Đã giao', 'date' => '18/12/2025'],
-                      ['id' => '#1083', 'customer' => 'Hoàng Văn E', 'total' => 150000, 'status' => 'Đã hủy', 'date' => '17/12/2025'],
-                    ];
-                    foreach ($orders as $order):
-                      $statusClass = [
-                        'Đã giao' => 'bg-gradient-success',
-                        'Đang giao' => 'bg-gradient-info',
-                        'Chờ xử lý' => 'bg-gradient-warning',
-                        'Đã hủy' => 'bg-gradient-danger'
-                      ];
-                      $statusBg = $statusClass[$order['status']] ?? 'bg-gradient-secondary';
-                    ?>
+                    <?php if (empty($categories)): ?>
+                    <tr>
+                      <td colspan="5" class="text-center py-4">
+                        <p class="text-muted mb-0">Chưa có danh mục nào</p>
+                      </td>
+                    </tr>
+                    <?php else: ?>
+                    <?php foreach ($categories as $cat): ?>
                     <tr>
                       <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm"><?= htmlspecialchars($order['id']) ?></h6>
-                          </div>
-                        </div>
+                        <h6 class="mb-0 text-sm"><?= htmlspecialchars($cat['name']) ?></h6>
                       </td>
                       <td>
-                        <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($order['customer']) ?></p>
+                        <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($cat['slug']) ?></p>
                       </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"><?= number_format($order['total'], 0, ',', '.') ?>₫</span>
+                      <td>
+                        <p class="text-xs mb-0 text-secondary">
+                          <?= htmlspecialchars(mb_substr($cat['description'] ?? '', 0, 60)) ?><?= strlen($cat['description'] ?? '') > 60 ? '...' : '' ?>
+                        </p>
+                      </td>
+                      <td class="align-middle">
+                        <span class="text-xs font-weight-bold <?= $cat['status'] === 'active' ? 'text-success' : 'text-secondary' ?>">
+                          <?= $cat['status'] === 'active' ? 'Hoạt động' : 'Ngừng dùng' ?>
+                        </span>
                       </td>
                       <td class="align-middle text-center">
-                        <span class="badge badge-sm <?= $statusBg ?>"><?= htmlspecialchars($order['status']) ?></span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-xs font-weight-bold"><?= htmlspecialchars($order['date']) ?></span>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                          <a href="category_edit.php?id=<?= $cat['id'] ?>" class="btn btn-sm mb-0 px-3 py-2" style="background-color:#000;border-color:#000;color:#fff;border-radius:10px;">
+                            <i class="fas fa-pen" style="font-size:14px;"></i>
+                            <span class="ms-1">Sửa</span>
+                          </a>
+                          <a href="category_delete.php?id=<?= $cat['id'] ?>" class="btn btn-sm mb-0 px-3 py-2" style="background-color:#000;border-color:#000;color:#fff;border-radius:10px;" onclick="return confirm('Xóa danh mục này? Các sản phẩm đang dùng danh mục này sẽ không bị xóa.')">
+                            <i class="fas fa-trash" style="font-size:14px;"></i>
+                            <span class="ms-1">Xóa</span>
+                          </a>
+                        </div>
                       </td>
                     </tr>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                   </tbody>
                 </table>
               </div>
@@ -337,6 +291,33 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
           </div>
         </div>
       </div>
+
+      <!-- Phân trang -->
+      <?php if ($totalPages > 1): ?>
+      <div class="row mt-4">
+        <div class="col-12">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <?php if ($page > 1): ?>
+              <li class="page-item">
+                <a class="page-link" href="?page=<?= $page - 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>">Trước</a>
+              </li>
+              <?php endif; ?>
+              <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+              <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $i ?><?= $search ? '&search=' . urlencode($search) : '' ?>"><?= $i ?></a>
+              </li>
+              <?php endfor; ?>
+              <?php if ($page < $totalPages): ?>
+              <li class="page-item">
+                <a class="page-link" href="?page=<?= $page + 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>">Sau</a>
+              </li>
+              <?php endif; ?>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
   </main>
 
@@ -348,14 +329,12 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
-      }
+      var options = { damping: '0.5' };
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
   </script>
-  <!-- Control Center for Soft Dashboard -->
   <script src="../assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
 </body>
 </html>
+
 
