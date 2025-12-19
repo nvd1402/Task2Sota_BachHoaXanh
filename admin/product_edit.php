@@ -44,6 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $short_description = trim($_POST['short_description'] ?? '');
     $price = floatval($_POST['price'] ?? 0);
     $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
+    $price_min = isset($_POST['price_min']) ? floatval($_POST['price_min']) : null;
+    $price_max = isset($_POST['price_max']) ? floatval($_POST['price_max']) : null;
+    $weight_options = trim($_POST['weight_options'] ?? '');
+    $promo_heading = trim($_POST['promo_heading'] ?? '');
+    $promo_content = trim($_POST['promo_content'] ?? '');
     $sku = trim($_POST['sku'] ?? '');
     $stock = intval($_POST['stock'] ?? 0);
     $category = trim($_POST['category'] ?? '');
@@ -61,6 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($price <= 0) {
         $errors[] = "Giá sản phẩm phải lớn hơn 0";
+    }
+    if ($price_min !== null && $price_max !== null && $price_min > $price_max) {
+        $errors[] = "Giá từ phải nhỏ hơn hoặc bằng giá đến";
     }
     
     // Xử lý upload ảnh mới
@@ -102,8 +110,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $checkStmt->close();
         
         // Cập nhật sản phẩm
-        $stmt = $conn->prepare("UPDATE products SET name = ?, slug = ?, description = ?, short_description = ?, price = ?, sale_price = ?, sku = ?, stock = ?, category = ?, image = ?, status = ?, featured = ? WHERE id = ?");
-        $stmt->bind_param("ssssddsisssii", $name, $slug, $description, $short_description, $price, $sale_price, $sku, $stock, $category, $image, $status, $featured, $id);
+        $stmt = $conn->prepare("UPDATE products SET name = ?, slug = ?, description = ?, short_description = ?, price = ?, sale_price = ?, price_min = ?, price_max = ?, weight_options = ?, promo_heading = ?, promo_content = ?, sku = ?, stock = ?, category = ?, image = ?, status = ?, featured = ? WHERE id = ?");
+        $stmt->bind_param(
+          "ssssddddssssisssii",
+          $name,
+          $slug,
+          $description,
+          $short_description,
+          $price,
+          $sale_price,
+          $price_min,
+          $price_max,
+          $weight_options,
+          $promo_heading,
+          $promo_content,
+          $sku,
+          $stock,
+          $category,
+          $image,
+          $status,
+          $featured,
+          $id
+        );
         
         if ($stmt->execute()) {
             header('Location: products.php?success=1');
@@ -128,7 +156,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'category' => $category,
         'status' => $status,
         'featured' => $featured,
-        'image' => $image
+        'image' => $image,
+        'price_min' => $price_min,
+        'price_max' => $price_max,
+        'weight_options' => $weight_options,
+        'promo_heading' => $promo_heading,
+        'promo_content' => $promo_content
     ]);
 }
 
@@ -346,8 +379,19 @@ closeDB($conn);
                     </div>
                     
                     <div class="mb-3">
-                      <label class="form-label">Giá <span class="text-danger">*</span></label>
+                      <label class="form-label">Giá cơ bản (dùng cho tính toán) <span class="text-danger">*</span></label>
                       <input type="number" name="price" class="form-control" step="0.01" min="0" value="<?= htmlspecialchars($product['price']) ?>" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Giá hiển thị từ</label>
+                      <input type="number" name="price_min" class="form-control" step="0.01" min="0" value="<?= htmlspecialchars($product['price_min'] ?? '') ?>">
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Giá hiển thị đến</label>
+                      <input type="number" name="price_max" class="form-control" step="0.01" min="0" value="<?= htmlspecialchars($product['price_max'] ?? '') ?>">
+                      <small class="text-muted">Ví dụ: 90000 và 130000 để hiển thị 90,000đ – 130,000đ</small>
                     </div>
                     
                     <div class="mb-3">
@@ -372,6 +416,11 @@ closeDB($conn);
                     </div>
                     
                     <div class="mb-3">
+                      <label class="form-label">Trọng lượng / kích thước</label>
+                      <input type="text" name="weight_options" class="form-control" value="<?= htmlspecialchars($product['weight_options'] ?? '') ?>" placeholder="VD: 1kg,2kg,3kg,4kg,5kg">
+                    </div>
+                    
+                    <div class="mb-3">
                       <label class="form-label">Trạng thái</label>
                       <select name="status" class="form-control">
                         <option value="active" <?= $product['status'] === 'active' ? 'selected' : '' ?>>Hoạt động</option>
@@ -384,6 +433,16 @@ closeDB($conn);
                         <input class="form-check-input" type="checkbox" name="featured" id="featured" <?= $product['featured'] ? 'checked' : '' ?>>
                         <label class="form-check-label" for="featured">Sản phẩm nổi bật</label>
                       </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Tiêu đề khuyến mãi</label>
+                      <input type="text" name="promo_heading" class="form-control" value="<?= htmlspecialchars($product['promo_heading'] ?? '') ?>" placeholder="VD: KHUYẾN MÃI TRỊ GIÁ 300.000₫">
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Nội dung khuyến mãi</label>
+                      <textarea name="promo_content" class="form-control" rows="3" placeholder="Mỗi dòng một ưu đãi"><?= htmlspecialchars($product['promo_content'] ?? '') ?></textarea>
                     </div>
                   </div>
                 </div>

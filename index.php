@@ -1,7 +1,67 @@
 <?php
 session_start();
+require_once 'config/database.php';
 
 $pageTitle = "Trang chủ - Bách Hóa Xanh";
+
+// Kết nối database
+$conn = connectDB();
+
+// Lấy sản phẩm nổi bật (featured)
+$featuredProducts = [];
+$sqlFeatured = "
+    SELECT p.*, c.name AS category_name
+    FROM products p
+    LEFT JOIN categories c
+      ON c.name = p.category OR c.slug = p.category
+    WHERE p.status = 'active' AND p.featured = 1
+    ORDER BY p.created_at DESC
+    LIMIT 10
+";
+if ($result = $conn->query($sqlFeatured)) {
+    while ($row = $result->fetch_assoc()) {
+        $featuredProducts[] = $row;
+    }
+    $result->free();
+}
+
+// Nếu chưa có sản phẩm nổi bật, fallback lấy sản phẩm mới nhất
+if (empty($featuredProducts)) {
+    $sqlLatest = "
+        SELECT p.*, c.name AS category_name
+        FROM products p
+        LEFT JOIN categories c
+          ON c.name = p.category OR c.slug = p.category
+        WHERE p.status = 'active'
+        ORDER BY p.created_at DESC
+        LIMIT 10
+    ";
+    if ($result = $conn->query($sqlLatest)) {
+        while ($row = $result->fetch_assoc()) {
+            $featuredProducts[] = $row;
+        }
+        $result->free();
+    }
+}
+
+// Sản phẩm cho block RAU – CỦ – QUẢ (6 sản phẩm mới nhất)
+$blockProducts = [];
+$sqlBlock = "
+    SELECT p.*, c.name AS category_name
+    FROM products p
+    LEFT JOIN categories c
+      ON c.name = p.category OR c.slug = p.category
+    WHERE p.status = 'active'
+    ORDER BY p.created_at DESC
+    LIMIT 6
+";
+if ($result = $conn->query($sqlBlock)) {
+    while ($row = $result->fetch_assoc()) {
+        $blockProducts[] = $row;
+    }
+    $result->free();
+}
+
 include 'includes/header.php';
 ?>
 
@@ -54,29 +114,31 @@ include 'includes/header.php';
         </div>
         <div class="featured-grid">
             <div id="featuredTrack" class="featured-track">
-            <?php
-            $featured = [
-                ['name' => 'Thực phẩm hữu cơ sạch', 'price' => '120,000₫ – 170,000₫', 'off' => '20%', 'img' => 'assets/images/1.jpg'],
-                ['name' => 'Nước giải khát có gas', 'price' => '90,000₫ – 130,000₫', 'off' => '19%', 'img' => 'assets/images/2.jpg'],
-                ['name' => 'Rau củ tươi sạch', 'price' => '90,000₫ – 130,000₫', 'off' => '19%', 'img' => 'assets/images/4.jpg'],
-                ['name' => 'Bánh mì tươi', 'price' => '90,000₫ – 130,000₫', 'off' => '19%', 'img' => 'assets/images/5.jpg'],
-                ['name' => 'Ngũ cốc dinh dưỡng', 'price' => '110,000₫ – 150,000₫', 'off' => '18%', 'img' => 'assets/images/1.jpg'],
-                ['name' => 'Nho tươi nhập khẩu', 'price' => '95,000₫ – 140,000₫', 'off' => '15%', 'img' => 'assets/images/2.jpg'],
-                ['name' => 'Rau củ mix salad', 'price' => '85,000₫ – 120,000₫', 'off' => '17%', 'img' => 'assets/images/4.jpg'],
-                ['name' => 'Bánh ngọt cao cấp', 'price' => '100,000₫ – 160,000₫', 'off' => '22%', 'img' => 'assets/images/5.jpg'],
-                ['name' => 'Nước ép trái cây', 'price' => '75,000₫ – 110,000₫', 'off' => '16%', 'img' => 'assets/images/1.jpg'],
-                ['name' => 'Sữa chua trái cây', 'price' => '60,000₫ – 90,000₫', 'off' => '14%', 'img' => 'assets/images/2.jpg'],
-            ];
-            foreach ($featured as $item): ?>
-                <a href="product-detail.php" class="featured-card">
+            <?php foreach ($featuredProducts as $item): ?>
+                <?php
+                $price     = (float)$item['price'];
+                $salePrice = isset($item['sale_price']) ? (float)$item['sale_price'] : 0;
+                $hasSale   = $salePrice > 0 && $salePrice < $price;
+                $offPercent = $hasSale ? round(100 - ($salePrice / $price) * 100) : 0;
+                $imgPath   = !empty($item['image']) ? 'assets/images/' . $item['image'] : 'assets/images/1.jpg';
+
+                // Giá hiển thị từ khoảng price_min / price_max, fallback về price
+                $displayMin = isset($item['price_min']) && $item['price_min'] > 0 ? (float)$item['price_min'] : $price;
+                $displayMax = isset($item['price_max']) && $item['price_max'] > 0 ? (float)$item['price_max'] : ($hasSale ? $salePrice : $price);
+                ?>
+                <a href="product-detail.php?id=<?= (int)$item['id'] ?>" class="featured-card">
                     <div class="featured-thumb">
+                        <?php if ($hasSale): ?>
                         <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
-                        <span class="sale-text">-<?= htmlspecialchars($item['off']) ?></span>
-                        <img src="<?= htmlspecialchars($item['img']) ?>" class="featured-product-img" alt="<?= htmlspecialchars($item['name']) ?>">
+                        <span class="sale-text">-<?= $offPercent ?>%</span>
+                        <?php endif; ?>
+                        <img src="<?= htmlspecialchars($imgPath) ?>" class="featured-product-img" alt="<?= htmlspecialchars($item['name']) ?>">
                     </div>
                     <div class="featured-body">
                         <p class="featured-name"><?= htmlspecialchars($item['name']) ?></p>
-                        <p class="featured-price"><?= htmlspecialchars($item['price']) ?></p>
+                        <p class="featured-price">
+                            <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                        </p>
                     </div>
                 </a>
             <?php endforeach; ?>
@@ -120,26 +182,29 @@ include 'includes/header.php';
 
             <!-- GRID SẢN PHẨM -->
             <div class="category-products">
-                <?php
-                $products = [
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'90,000₫ – 130,000₫','sale'=>'19%','img'=>'1.jpg'],
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'90,000₫ – 130,000₫','sale'=>'19%','img'=>'2.jpg'],
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'4.jpg'],
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'5.jpg'],
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'1.jpg'],
-                    ['name'=>'Thực phẩm hữu cơ sạch','price'=>'120,000₫ – 170,000₫','sale'=>'20%','img'=>'2.jpg'],
-                ];
+                <?php foreach ($blockProducts as $p): ?>
+                    <?php
+                    $price     = (float)$p['price'];
+                    $salePrice = isset($p['sale_price']) ? (float)$p['sale_price'] : 0;
+                    $hasSale   = $salePrice > 0 && $salePrice < $price;
+                    $offPercent = $hasSale ? round(100 - ($salePrice / $price) * 100) : 0;
+                    $imgPath   = !empty($p['image']) ? 'assets/images/' . $p['image'] : 'assets/images/1.jpg';
 
-                foreach ($products as $p):
+                    $displayMin = isset($p['price_min']) && $p['price_min'] > 0 ? (float)$p['price_min'] : $price;
+                    $displayMax = isset($p['price_max']) && $p['price_max'] > 0 ? (float)$p['price_max'] : ($hasSale ? $salePrice : $price);
                     ?>
-                    <a href="product-detail.php" class="product-item">
+                    <a href="product-detail.php?id=<?= (int)$p['id'] ?>" class="product-item">
                         <div class="product-thumb">
+                            <?php if ($hasSale): ?>
                             <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
-                            <span class="sale-text">-<?= $p['sale'] ?></span>
-                            <img src="assets/images/<?= $p['img'] ?>" class="product-img" alt="<?= $p['name'] ?>">
+                            <span class="sale-text">-<?= $offPercent ?>%</span>
+                            <?php endif; ?>
+                            <img src="<?= htmlspecialchars($imgPath) ?>" class="product-img" alt="<?= htmlspecialchars($p['name']) ?>">
                         </div>
-                        <p class="product-name"><?= $p['name'] ?></p>
-                        <p class="product-price"><?= $p['price'] ?></p>
+                        <p class="product-name"><?= htmlspecialchars($p['name']) ?></p>
+                        <p class="product-price">
+                            <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                        </p>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -172,6 +237,7 @@ include 'includes/header.php';
         <div class="news-carousel">
             <div class="news-track" id="newsTrack">
                 <?php
+                // Hiện tại tin tức vẫn dùng dữ liệu mẫu tĩnh
                 $news = [
                     ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
                     ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
@@ -197,5 +263,11 @@ include 'includes/header.php';
     </div>
 </section>
 
-<?php include 'includes/footer.php'; ?>
+<?php
+// Đóng kết nối database
+if (isset($conn)) {
+    closeDB($conn);
+}
 
+include 'includes/footer.php';
+?>

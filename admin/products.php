@@ -341,16 +341,17 @@ closeDB($conn);
                         </div>
                       </td>
                       <td class="align-middle text-center">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                          <a href="product_edit.php?id=<?= $product['id'] ?>" class="btn btn-sm mb-0 px-3 py-2" data-bs-toggle="tooltip" title="Sửa" style="background-color: #000; border-color: #000; color: #fff; border-radius: 10px;">
-                            <i class="fas fa-pen" style="font-size: 14px;"></i>
-                            <span class="ms-1">Sửa</span>
-                          </a>
-                          <a href="product_delete.php?id=<?= $product['id'] ?>" class="btn btn-sm mb-0 px-3 py-2" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')" data-bs-toggle="tooltip" title="Xóa" style="background-color: #000; border-color: #000; color: #fff; border-radius: 10px;">
-                            <i class="fas fa-trash" style="font-size: 14px;"></i>
-                            <span class="ms-1">Xóa</span>
-                          </a>
-                        </div>
+                        <a href="product_edit.php?id=<?= $product['id'] ?>"
+                           class="text-xs font-weight-bold"
+                           style="color:#3da04d; text-decoration:none; margin-right:12px;">
+                          Sửa
+                        </a>
+                        <a href="product_delete.php?id=<?= $product['id'] ?>"
+                           class="text-xs font-weight-bold"
+                           style="color:#e53935; text-decoration:none;"
+                           onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
+                          Xóa
+                        </a>
                       </td>
                     </tr>
                     <?php endforeach; ?>
