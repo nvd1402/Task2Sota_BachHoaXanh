@@ -2,6 +2,26 @@
  * File JavaScript tùy chỉnh
  */
 
+// User Dropdown Toggle
+(function() {
+    const userDropdownBtn = document.getElementById('userDropdownBtn');
+    const userDropdownMenu = document.getElementById('userDropdownMenu');
+    
+    if (userDropdownBtn && userDropdownMenu) {
+        userDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdownMenu.classList.toggle('show');
+        });
+        
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            if (!userDropdownBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
+                userDropdownMenu.classList.remove('show');
+            }
+        });
+    }
+})();
+
 // Code JavaScript tại đây
 
 // Related Articles Carousel (News Detail Page)

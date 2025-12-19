@@ -96,9 +96,40 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
         </a>
 
         <!-- USER -->
-        <a href="login.php" class="user-btn">
+        <?php
+        // Kiểm tra đăng nhập
+        $isLoggedIn = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+        if ($isLoggedIn):
+        ?>
+        <div class="user-dropdown">
+            <button type="button" class="user-btn" title="Hồ sơ" id="userDropdownBtn">
+                <i class="bi bi-person-fill"></i>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+                <div class="user-dropdown-header">
+                    <strong><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username']) ?></strong>
+                    <small><?= htmlspecialchars($_SESSION['email']) ?></small>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <a href="profile.php" class="user-dropdown-item">
+                    <i class="bi bi-person"></i> Hồ sơ của tôi
+                </a>
+                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                <a href="admin/index.php" class="user-dropdown-item">
+                    <i class="bi bi-speedometer2"></i> Trang quản trị
+                </a>
+                <?php endif; ?>
+                <div class="user-dropdown-divider"></div>
+                <a href="logout.php" class="user-dropdown-item">
+                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+        <?php else: ?>
+        <a href="login.php" class="user-btn" title="Đăng nhập">
             <i class="bi bi-person-fill"></i>
         </a>
+        <?php endif; ?>
 
     </div>
 </header>
