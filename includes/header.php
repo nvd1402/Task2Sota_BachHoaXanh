@@ -106,11 +106,6 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
                 <i class="bi bi-person-fill"></i>
             </button>
             <div class="user-dropdown-menu" id="userDropdownMenu">
-                <div class="user-dropdown-header">
-                    <strong><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username']) ?></strong>
-                    <small><?= htmlspecialchars($_SESSION['email']) ?></small>
-                </div>
-                <div class="user-dropdown-divider"></div>
                 <a href="profile.php" class="user-dropdown-item">
                     <i class="bi bi-person"></i> Hồ sơ của tôi
                 </a>
