@@ -1,31 +1,146 @@
 <?php
 session_start();
+require_once 'config/database.php';
+require_once 'includes/functions.php';
+
 $pageTitle = "Thanh toán - Bách Hóa Xanh";
-include 'includes/header.php';
 
-// Mock cart data (same as cart page)
-$cartItems = [
-    [
-        'id' => 1,
-        'img' => '4.jpg',
-        'name' => 'Thực phẩm hữu cơ sạch - 3KG',
-        'price' => 130000,
-        'quantity' => 1
-    ],
-    [
-        'id' => 2,
-        'img' => '5.jpg',
-        'name' => 'Thực phẩm hữu cơ sạch - 2KG',
-        'price' => 110000,
-        'quantity' => 1
-    ]
-];
+// Kết nối database
+$conn = connectDB();
 
-$subtotal = 0;
-foreach ($cartItems as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
+// Lấy giỏ hàng từ session/database
+$cartItems = getCartItems($conn);
+$subtotal = calculateCartTotal($cartItems);
 $total = $subtotal;
+
+// Nếu giỏ hàng trống, chuyển về trang giỏ hàng
+if (empty($cartItems)) {
+    header('Location: cart.php');
+    exit();
+}
+
+// Xử lý đặt hàng
+$orderPlaced = false;
+$orderNumber = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+    // Lấy thông tin từ form
+    $firstName = trim($_POST['first_name'] ?? '');
+    $lastName = trim($_POST['last_name'] ?? '');
+    $companyName = trim($_POST['company_name'] ?? '');
+    $country = trim($_POST['country'] ?? 'vietnam');
+    $address1 = trim($_POST['address_1'] ?? '');
+    $address2 = trim($_POST['address_2'] ?? '');
+    $postcode = trim($_POST['postcode'] ?? '');
+    $city = trim($_POST['city'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $orderNotes = trim($_POST['order_notes'] ?? '');
+    
+    // Validate
+    if (empty($firstName) || empty($lastName) || empty($address1) || empty($city) || empty($phone) || empty($email)) {
+        $error = 'Vui lòng điền đầy đủ thông tin bắt buộc';
+    } else {
+        // Tạo mã đơn hàng
+        $orderNumber = 'ORD' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        // Tính tổng tiền
+        $subtotal = calculateCartTotal($cartItems);
+        $shippingFee = 30000; // Phí vận chuyển mặc định
+        $discount = 0;
+        $total = $subtotal + $shippingFee - $discount;
+        
+        // Lấy user_id nếu đã đăng nhập
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+        
+        // Lấy phương thức thanh toán
+        $paymentMethod = trim($_POST['payment_method'] ?? 'cod');
+        $paymentStatus = ($paymentMethod === 'bank_transfer' || $paymentMethod === 'e_wallet') ? 'pending' : 'pending';
+        
+        // Tạo đơn hàng
+        $customerName = $firstName . ' ' . $lastName;
+        $fullAddress = $address1;
+        if (!empty($address2)) {
+            $fullAddress .= ', ' . $address2;
+        }
+        
+        $sql = "INSERT INTO orders (
+            user_id, order_number, customer_name, customer_email, customer_phone,
+            customer_address, customer_city, customer_district, customer_ward,
+            payment_method, payment_status, shipping_method, shipping_fee,
+            subtotal, discount, total, status, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        $shippingMethod = 'standard';
+        $orderStatus = 'pending';
+        $district = '';
+        $ward = '';
+        
+        $stmt->bind_param(
+            "issssssssssidddsss",
+            $userId, $orderNumber, $customerName, $email, $phone,
+            $fullAddress, $city, $district, $ward,
+            $paymentMethod, $paymentStatus, $shippingMethod, $shippingFee,
+            $subtotal, $discount, $total, $orderStatus, $orderNotes
+        );
+        
+        if ($stmt->execute()) {
+            $orderId = $stmt->insert_id;
+            
+            // Thêm chi tiết đơn hàng
+            foreach ($cartItems as $item) {
+                // Lấy thông tin sản phẩm
+                $productSql = "SELECT * FROM products WHERE id = ?";
+                $productStmt = $conn->prepare($productSql);
+                $productStmt->bind_param("i", $item['product_id']);
+                $productStmt->execute();
+                $productResult = $productStmt->get_result();
+                $product = $productResult->fetch_assoc();
+                $productStmt->close();
+                
+                if ($product) {
+                    $itemSql = "INSERT INTO order_items (
+                        order_id, product_id, product_name, product_image, product_sku,
+                        quantity, weight_option, unit_price, subtotal
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    
+                    $itemStmt = $conn->prepare($itemSql);
+                    $productName = $product['name'];
+                    $productImage = $product['image'];
+                    $productSku = $product['sku'] ?? '';
+                    $quantity = $item['quantity'];
+                    $weightOption = $item['weight_option'] ?? null;
+                    $unitPrice = $item['price'];
+                    $itemSubtotal = $unitPrice * $quantity;
+                    
+                    $itemStmt->bind_param(
+                        "iisssisdd",
+                        $orderId, $item['product_id'], $productName, $productImage, $productSku,
+                        $quantity, $weightOption, $unitPrice, $itemSubtotal
+                    );
+                    $itemStmt->execute();
+                    $itemStmt->close();
+                }
+            }
+            
+            // Xóa giỏ hàng
+            $_SESSION['cart'] = [];
+            
+            $orderPlaced = true;
+            $stmt->close();
+            
+            // Chuyển đến trang hoàn tất đơn hàng
+            header('Location: order-complete.php?order=' . urlencode($orderNumber));
+            exit();
+        } else {
+            $error = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
+            $stmt->close();
+        }
+    }
+}
+
+include 'includes/header.php';
 ?>
 
 <main class="checkout-page">
@@ -64,7 +179,7 @@ $total = $subtotal;
             <div class="checkout-billing-section">
                 <h2 class="billing-title">BILLING DETAILS</h2>
 
-                <form class="billing-form" action="#" method="post">
+                <form class="billing-form" action="checkout.php" method="post">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="first-name">First name *</label>
@@ -203,11 +318,33 @@ $total = $subtotal;
                     </div>
 
                     <div class="payment-method">
-                        <h4 class="payment-title">Trả tiền mặt khi nhận hàng</h4>
-                        <p class="payment-description">Trả tiền mặt khi giao hàng</p>
+                        <h4 class="payment-title">Phương thức thanh toán</h4>
+                        <div class="payment-options">
+                            <div class="payment-option">
+                                <input type="radio" id="payment-cod" name="payment_method" value="cod" checked>
+                                <label for="payment-cod">
+                                    <strong>Trả tiền mặt khi nhận hàng (COD)</strong>
+                                    <span class="payment-desc">Thanh toán khi nhận được hàng</span>
+                                </label>
+                            </div>
+                            <div class="payment-option">
+                                <input type="radio" id="payment-bank" name="payment_method" value="bank_transfer">
+                                <label for="payment-bank">
+                                    <strong>Chuyển khoản ngân hàng</strong>
+                                    <span class="payment-desc">Chuyển khoản qua tài khoản ngân hàng</span>
+                                </label>
+                            </div>
+                            <div class="payment-option">
+                                <input type="radio" id="payment-wallet" name="payment_method" value="e_wallet">
+                                <label for="payment-wallet">
+                                    <strong>Ví điện tử</strong>
+                                    <span class="payment-desc">Thanh toán qua ví điện tử (MoMo, ZaloPay...)</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn-place-order" id="place-order-btn" disabled>PLACE ORDER</button>
+                    <button type="submit" name="place_order" class="btn-place-order" id="place-order-btn" disabled>PLACE ORDER</button>
 
                     <p class="privacy-notice">
                         Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.
@@ -287,8 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (allFilled) {
-                // Redirect to order complete page
-                window.location.href = 'order-complete.php';
+                // Submit form
+                billingForm.submit();
             } else {
                 alert('Vui lòng điền đầy đủ các trường bắt buộc.');
             }

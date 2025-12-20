@@ -1,53 +1,50 @@
 <?php
 session_start();
+require_once 'config/database.php';
+require_once 'includes/functions.php';
+
 $pageTitle = "Chi tiết tuyển dụng - Bách Hóa Xanh";
 
+// Kết nối database
+$conn = connectDB();
+
 // Lấy slug từ URL
-$slug = $_GET['slug'] ?? '';
+$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 
-// Mock data - trong thực tế sẽ lấy từ database
-$jobDetails = [
-    'tuyen-nhan-vien-marketing' => [
-        'title' => 'Tuyển nhân viên marketing',
-        'date' => 'THÁNG 6 22, 2022',
-        'author' => 'Admin',
-        'content' => [
-            'Nếu trước kia thế giới chia thành 2 loại người là mua đồ tận nơi và mua đồ online thì giờ đây, mua đồ online đã trở thành xu hướng chủ đạo. Tuy nhiên, việc mua sắm online cũng có những mặt trái mà bạn cần lưu ý.',
-            'Một trong những vấn đề lớn nhất khi mua sắm online là dễ bị "cuốn theo" và chi tiêu quá mức. Những chương trình khuyến mãi, giảm giá liên tục có thể khiến bạn mua những món đồ không thực sự cần thiết.',
-            'Ngoài ra, việc đánh giá chất lượng sản phẩm qua hình ảnh cũng là một thách thức. Hình ảnh trên website có thể khác với thực tế, khiến bạn thất vọng khi nhận hàng.',
-            'Để mua sắm online hiệu quả, bạn nên:',
-            '• Lập danh sách mua sắm trước khi vào website',
-            '• So sánh giá ở nhiều nơi khác nhau',
-            '• Đọc kỹ các đánh giá và nhận xét từ khách hàng',
-            '• Kiểm tra chính sách đổi trả và bảo hành',
-            '• Chỉ mua từ những website uy tín và có chứng nhận bảo mật'
-        ],
-        'image' => 'assets/images/lesterblur__2.jpg'
-    ],
-    'tuyen-dung-nhan-vien-phu-trach-cua-hang' => [
-        'title' => 'Tuyển dụng nhận viên phụ trách cửa hàng',
-        'date' => 'THÁNG 5 15, 2025',
-        'author' => 'Admin',
-        'content' => [
-            'Chúng tôi đang tìm kiếm một nhân viên phụ trách cửa hàng có kinh nghiệm và đam mê với ngành bán lẻ.',
-            'Vị trí này đòi hỏi khả năng quản lý, giao tiếp tốt và tinh thần trách nhiệm cao.'
-        ],
-        'image' => 'assets/images/lesterblur__2.jpg'
-    ],
-    'tuyen-nhan-vien-ban-hang' => [
-        'title' => 'Tuyển nhân viên bán hàng',
-        'date' => 'THÁNG 5 8, 2025',
-        'author' => 'Admin',
-        'content' => [
-            'Chúng tôi đang tuyển dụng nhân viên bán hàng với mức lương cạnh tranh và môi trường làm việc chuyên nghiệp.',
-            'Ứng viên cần có kỹ năng giao tiếp tốt và tinh thần phục vụ khách hàng nhiệt tình.'
-        ],
-        'image' => 'assets/images/lesterblur__2.jpg'
-    ]
-];
+// Lấy tuyển dụng từ database
+$job = null;
+if (!empty($slug)) {
+    $job = getRecruitmentBySlug($conn, $slug);
+}
 
-$job = $jobDetails[$slug] ?? $jobDetails['tuyen-nhan-vien-marketing'];
+// Nếu không tìm thấy, redirect về trang tuyển dụng
+if (!$job) {
+    closeDB($conn);
+    header('Location: recruitment.php');
+    exit();
+}
+
 $pageTitle = htmlspecialchars($job['title']) . " - Bách Hóa Xanh";
+
+// Format ngày đăng
+$publishedDate = $job['created_at'] ? date('d/m/Y', strtotime($job['created_at'])) : '';
+$publishedDateFormatted = strtoupper(date('F d, Y', strtotime($job['created_at'])));
+
+// Lấy tuyển dụng liên quan (cùng status)
+$relatedJobs = [];
+$relatedSql = "SELECT * FROM recruitment WHERE status = 'open' AND id != ? ORDER BY created_at DESC LIMIT 2";
+$relatedStmt = $conn->prepare($relatedSql);
+$relatedStmt->bind_param("i", $job['id']);
+$relatedStmt->execute();
+$relatedResult = $relatedStmt->get_result();
+while ($row = $relatedResult->fetch_assoc()) {
+    $relatedJobs[] = $row;
+}
+$relatedStmt->close();
+
+// Lấy 5 tin tức mới nhất cho sidebar
+$latestNewsData = getNews($conn, ['per_page' => 5, 'status' => 'published']);
+$latestNews = $latestNewsData['news'];
 
 include 'includes/header.php';
 ?>
@@ -59,17 +56,58 @@ include 'includes/header.php';
             <h1 class="recruit-detail-title"><?= htmlspecialchars($job['title']) ?></h1>
             
             <div class="recruit-detail-meta">
-                <span class="recruit-meta-text">POSTED ON <?= htmlspecialchars($job['date']) ?> BY <?= htmlspecialchars($job['author']) ?></span>
+                <span class="recruit-meta-text">POSTED ON <?= htmlspecialchars($publishedDateFormatted) ?></span>
+            </div>
+
+            <!-- Thông tin tuyển dụng -->
+            <div class="recruit-info-box mb-4 p-3 border rounded">
+                <div class="row g-3">
+                    <?php if (!empty($job['position'])): ?>
+                    <div class="col-md-6">
+                        <strong>Vị trí:</strong> <?= htmlspecialchars($job['position']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($job['department'])): ?>
+                    <div class="col-md-6">
+                        <strong>Phòng ban:</strong> <?= htmlspecialchars($job['department']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($job['location'])): ?>
+                    <div class="col-md-6">
+                        <strong>Địa điểm:</strong> <?= htmlspecialchars($job['location']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($job['employment_type'])): ?>
+                    <div class="col-md-6">
+                        <strong>Loại hình:</strong> <?= htmlspecialchars($job['employment_type']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($job['salary_display'])): ?>
+                    <div class="col-md-6">
+                        <strong>Mức lương:</strong> <?= htmlspecialchars($job['salary_display']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($job['deadline'])): ?>
+                    <div class="col-md-6">
+                        <strong>Hạn nộp hồ sơ:</strong> <?= date('d/m/Y', strtotime($job['deadline'])) ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <div class="recruit-detail-body">
-                <?php foreach ($job['content'] as $paragraph): ?>
-                    <p><?= htmlspecialchars($paragraph) ?></p>
-                <?php endforeach; ?>
-            </div>
-
-            <div class="recruit-detail-image">
-                <img src="<?= htmlspecialchars($job['image']) ?>" alt="<?= htmlspecialchars($job['title']) ?>">
+                <h3>Mô tả công việc</h3>
+                <?= nl2br(htmlspecialchars($job['description'])) ?>
+                
+                <?php if (!empty($job['requirements'])): ?>
+                <h3 class="mt-4">Yêu cầu ứng viên</h3>
+                <?= nl2br(htmlspecialchars($job['requirements'])) ?>
+                <?php endif; ?>
+                
+                <?php if (!empty($job['benefits'])): ?>
+                <h3 class="mt-4">Quyền lợi</h3>
+                <?= nl2br(htmlspecialchars($job['benefits'])) ?>
+                <?php endif; ?>
             </div>
 
             <!-- Promo Text -->
@@ -108,38 +146,25 @@ include 'includes/header.php';
                 <h3 class="related-title">Bài viết liên quan</h3>
                 <div class="related-articles">
                     <?php
-                    $relatedArticles = [
-                        [
-                            'title' => 'Tuyển dụng nhận viên phụ trách cửa hàng',
-                            'date' => 'Tháng 6 22, 2022',
-                            'desc' => 'Nếu trước kia thế giới chia thành 2 loại người là mua đồ tận nơi',
-                            'slug' => 'tuyen-dung-nhan-vien-phu-trach-cua-hang'
-                        ],
-                        [
-                            'title' => 'Tuyển nhân viên bán hàng',
-                            'date' => 'Tháng 6 22, 2022',
-                            'desc' => 'Nếu trước kia thế giới chia thành 2 loại người là mua đồ tận nơi',
-                            'slug' => 'tuyen-nhan-vien-ban-hang'
-                        ],
-                    ];
-                    // Loại trừ bài viết hiện tại
-                    $relatedArticles = array_filter($relatedArticles, function($article) use ($slug) {
-                        return $article['slug'] !== $slug;
-                    });
-                    $relatedArticles = array_values($relatedArticles);
-                    $relatedArticles = array_slice($relatedArticles, 0, 2);
-                    
-                    foreach ($relatedArticles as $related): ?>
-                        <article class="related-article-item">
-                            <h4 class="related-article-title">
-                                <a href="recruitment-detail.php?slug=<?= htmlspecialchars($related['slug']) ?>">
-                                    <?= htmlspecialchars($related['title']) ?>
-                                </a>
-                            </h4>
-                            <p class="related-article-date"><?= htmlspecialchars($related['date']) ?></p>
-                            <p class="related-article-desc"><?= htmlspecialchars($related['desc']) ?></p>
-                        </article>
-                    <?php endforeach; ?>
+                    if (empty($relatedJobs)) {
+                        echo '<p class="text-muted">Chưa có vị trí tuyển dụng liên quan.</p>';
+                    } else {
+                        foreach ($relatedJobs as $related): 
+                            $relatedDate = date('d/m/Y', strtotime($related['created_at']));
+                            $relatedDesc = mb_substr(strip_tags($related['description']), 0, 150) . '...';
+                            ?>
+                            <article class="related-article-item">
+                                <h4 class="related-article-title">
+                                    <a href="recruitment-detail.php?slug=<?= htmlspecialchars($related['slug']) ?>">
+                                        <?= htmlspecialchars($related['title']) ?>
+                                    </a>
+                                </h4>
+                                <p class="related-article-date"><?= htmlspecialchars($relatedDate) ?></p>
+                                <p class="related-article-desc"><?= htmlspecialchars($relatedDesc) ?></p>
+                            </article>
+                        <?php endforeach;
+                    }
+                    ?>
                 </div>
             </div>
 
@@ -148,33 +173,86 @@ include 'includes/header.php';
                 <h3 class="comment-section-title">Để lại một bình luận</h3>
                 <p class="comment-notice">Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
                 
-                <form class="comment-form" action="#" method="post">
+                <?php
+                // Xử lý form comment
+                $commentSuccess = false;
+                $commentError = '';
+                
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
+                    $commentName = trim($_POST['name'] ?? '');
+                    $commentEmail = trim($_POST['email'] ?? '');
+                    $commentMessage = trim($_POST['comment'] ?? '');
+                    
+                    if (empty($commentName)) {
+                        $commentError = 'Vui lòng nhập tên';
+                    } elseif (empty($commentEmail)) {
+                        $commentError = 'Vui lòng nhập email';
+                    } elseif (!filter_var($commentEmail, FILTER_VALIDATE_EMAIL)) {
+                        $commentError = 'Email không hợp lệ';
+                    } elseif (empty($commentMessage)) {
+                        $commentError = 'Vui lòng nhập bình luận';
+                    } else {
+                        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                        $subject = 'Bình luận về tuyển dụng: ' . $job['title'];
+                        
+                        $commentSql = "INSERT INTO contact (name, email, phone, subject, message, ip_address, status) 
+                                       VALUES (?, ?, ?, ?, ?, ?, 'new')";
+                        
+                        $commentStmt = $conn->prepare($commentSql);
+                        $phone = '';
+                        $commentStmt->bind_param("ssssss", $commentName, $commentEmail, $phone, $subject, $commentMessage, $ipAddress);
+                        
+                        if ($commentStmt->execute()) {
+                            $commentSuccess = true;
+                        } else {
+                            $commentError = 'Có lỗi xảy ra khi gửi bình luận. Vui lòng thử lại.';
+                        }
+                        
+                        $commentStmt->close();
+                    }
+                }
+                ?>
+                
+                <?php if ($commentSuccess): ?>
+                    <div class="alert alert-success mb-3" role="alert">
+                        <i class="bi bi-check-circle"></i> Cảm ơn bạn đã bình luận! Bình luận của bạn đang chờ được duyệt.
+                    </div>
+                <?php elseif ($commentError): ?>
+                    <div class="alert alert-danger mb-3" role="alert">
+                        <i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($commentError) ?>
+                    </div>
+                <?php endif; ?>
+                
+                <form class="comment-form" action="recruitment-detail.php?slug=<?= htmlspecialchars($slug) ?>" method="post">
                     <div class="form-group">
                         <label for="comment">Bình luận *</label>
-                        <textarea id="comment" name="comment" rows="6" required></textarea>
+                        <textarea id="comment" name="comment" rows="6" required><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="comment-name">Tên *</label>
-                            <input type="text" id="comment-name" name="name" required>
+                            <input type="text" id="comment-name" name="name" 
+                                   value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>" required>
                         </div>
                         <div class="form-group">
                             <label for="comment-email">Email *</label>
-                            <input type="email" id="comment-email" name="email" required>
+                            <input type="email" id="comment-email" name="email" 
+                                   value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" required>
                         </div>
                         <div class="form-group">
                             <label for="comment-website">Trang web</label>
-                            <input type="url" id="comment-website" name="website">
+                            <input type="url" id="comment-website" name="website" 
+                                   value="<?= isset($_POST['website']) ? htmlspecialchars($_POST['website']) : '' ?>">
                         </div>
                     </div>
                     
                     <div class="form-group checkbox-group">
-                        <input type="checkbox" id="save-info" name="save_info">
+                        <input type="checkbox" id="save-info" name="save_info" <?= isset($_POST['save_info']) ? 'checked' : '' ?>>
                         <label for="save-info">Lưu tên của tôi, email, và trang web trong trình duyệt này cho lần bình luận kế tiếp của tôi.</label>
                     </div>
                     
-                    <button type="submit" class="comment-submit-btn">GỬI BÌNH LUẬN</button>
+                    <button type="submit" name="submit_comment" class="comment-submit-btn">GỬI BÌNH LUẬN</button>
                 </form>
             </div>
         </article>
@@ -194,28 +272,34 @@ include 'includes/header.php';
                 <h4>TIN TỨC MỚI NHẤT</h4>
                 <div class="recruit-latest">
                     <?php
-                    $latest = [
-                        ['title'=>'10 loại rau củ quả tốt cho cơ thể','img'=>'assets/images/4.jpg'],
-                        ['title'=>'10 loại rau củ quả tốt cho cơ thể','img'=>'assets/images/2.jpg'],
-                        ['title'=>'10 loại rau củ quả tốt cho cơ thể','img'=>'assets/images/2.jpg'],
-                        ['title'=>'10 loại rau củ quả tốt cho cơ thể','img'=>'assets/images/4.jpg'],
-                        ['title'=>'10 loại rau củ quả tốt cho cơ thể','img'=>'assets/images/5.jpg'],
-                    ];
-                    foreach ($latest as $item): ?>
-                    <a href="#" class="latest-item">
-                        <div class="latest-thumb">
-                            <img src="<?= htmlspecialchars($item['img']) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
-                        </div>
-                        <div class="latest-info">
-                            <p><?= htmlspecialchars($item['title']) ?></p>
-                        </div>
-                    </a>
-                    <?php endforeach; ?>
+                    if (empty($latestNews)) {
+                        echo '<p class="text-muted">Chưa có tin tức nào.</p>';
+                    } else {
+                        foreach ($latestNews as $item): 
+                            $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                            ?>
+                            <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="latest-item">
+                                <div class="latest-thumb">
+                                    <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
+                                </div>
+                                <div class="latest-info">
+                                    <p><?= htmlspecialchars($item['title']) ?></p>
+                                </div>
+                            </a>
+                        <?php endforeach;
+                    }
+                    ?>
                 </div>
             </div>
         </aside>
     </div>
 </main>
 
-<?php include 'includes/footer.php'; ?>
+<?php 
+// Đóng kết nối database
+if (isset($conn)) {
+    closeDB($conn);
+}
+include 'includes/footer.php'; 
+?>
 

@@ -1,6 +1,53 @@
 <?php
 session_start();
+require_once 'config/database.php';
+
 $pageTitle = "Liên hệ - Bách Hóa Xanh";
+
+// Kết nối database
+$conn = connectDB();
+
+// Xử lý form submit
+$success = false;
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $message = trim($_POST['message'] ?? '');
+    
+    // Validate
+    if (empty($name)) {
+        $error = 'Vui lòng nhập họ và tên';
+    } elseif (empty($email)) {
+        $error = 'Vui lòng nhập email';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Email không hợp lệ';
+    } elseif (empty($message)) {
+        $error = 'Vui lòng nhập nội dung liên hệ';
+    } else {
+        // Lấy IP address
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        
+        // Lưu vào database
+        $sql = "INSERT INTO contact (name, email, phone, subject, message, ip_address, status) 
+                VALUES (?, ?, ?, ?, ?, ?, 'new')";
+        
+        $stmt = $conn->prepare($sql);
+        $subject = 'Liên hệ từ website';
+        $stmt->bind_param("ssssss", $name, $email, $phone, $subject, $message, $ipAddress);
+        
+        if ($stmt->execute()) {
+            $success = true;
+        } else {
+            $error = 'Có lỗi xảy ra khi gửi liên hệ. Vui lòng thử lại.';
+        }
+        
+        $stmt->close();
+    }
+}
+
 include 'includes/header.php';
 ?>
 
@@ -62,25 +109,38 @@ include 'includes/header.php';
 
             <!-- RIGHT: FORM -->
             <div class="contact-form-col">
-                <form class="contact-form" action="#" method="post">
+                <?php if ($success): ?>
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i> Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+                    </div>
+                <?php elseif ($error): ?>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
+                
+                <form class="contact-form" action="contact.php" method="post" id="contactForm">
                     <div class="form-group">
-                        <input type="text" name="name" class="form-control" placeholder="Họ và tên..." required>
+                        <input type="text" name="name" class="form-control" placeholder="Họ và tên..." 
+                               value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <input type="email" name="email" class="form-control" placeholder="Địa chỉ email..." required>
+                        <input type="email" name="email" class="form-control" placeholder="Địa chỉ email..." 
+                               value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <input type="tel" name="phone" class="form-control" placeholder="Số điện thoại..." required>
+                        <input type="tel" name="phone" class="form-control" placeholder="Số điện thoại..." 
+                               value="<?= isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : '' ?>" required>
                     </div>
 
                     <div class="form-group">
                         <textarea name="message" class="form-control" rows="6"
-                                  placeholder="Nhập nội dung liên hệ..." required></textarea>
+                                  placeholder="Nhập nội dung liên hệ..." required><?= isset($_POST['message']) ? htmlspecialchars($_POST['message']) : '' ?></textarea>
                     </div>
 
-                    <button type="submit" class="contact-submit-btn">
+                    <button type="submit" name="submit_contact" class="contact-submit-btn">
                         GỬI LIÊN HỆ
                     </button>
                 </form>
@@ -91,4 +151,10 @@ include 'includes/header.php';
 
 </main>
 
-<?php include 'includes/footer.php'; ?>
+<?php 
+// Đóng kết nối database
+if (isset($conn)) {
+    closeDB($conn);
+}
+include 'includes/footer.php'; 
+?>

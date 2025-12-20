@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config/database.php';
+require_once 'includes/functions.php';
 
 $pageTitle = "Trang chủ - Bách Hóa Xanh";
 
@@ -44,23 +45,9 @@ if (empty($featuredProducts)) {
     }
 }
 
-// Sản phẩm cho block RAU – CỦ – QUẢ (6 sản phẩm mới nhất)
-$blockProducts = [];
-$sqlBlock = "
-    SELECT p.*, c.name AS category_name
-    FROM products p
-    LEFT JOIN categories c
-      ON c.name = p.category OR c.slug = p.category
-    WHERE p.status = 'active'
-    ORDER BY p.created_at DESC
-    LIMIT 6
-";
-if ($result = $conn->query($sqlBlock)) {
-    while ($row = $result->fetch_assoc()) {
-        $blockProducts[] = $row;
-    }
-    $result->free();
-}
+// Lấy danh mục cha có sản phẩm để hiển thị trên trang chủ
+// Mỗi danh mục sẽ lấy 6 sản phẩm đầu tiên (từ danh mục cha và tất cả danh mục con)
+$categoriesWithProducts = getParentCategoriesWithProducts($conn, null, 6);
 
 include 'includes/header.php';
 ?>
@@ -154,64 +141,76 @@ include 'includes/header.php';
     </div>
 </section>
 
-<!-- ===== DANH MỤC RAU – CỦ – QUẢ ===== -->
-<section class="category-block">
-    <div class="container">
+<!-- ===== CÁC DANH MỤC SẢN PHẨM ===== -->
+<?php foreach ($categoriesWithProducts as $cat): ?>
+    <?php if (!empty($cat['products'])): ?>
+    <section class="category-block">
+        <div class="container">
 
-        <!-- HEADER -->
-        <div class="category-block-header">
-            <div class="left">
-                <img src="assets/images/icon_ns.png" alt="Icon">
-                <h3>RAU – CỦ – QUẢ</h3>
+            <!-- HEADER -->
+            <div class="category-block-header">
+                <div class="left">
+                    <?php if (!empty($cat['image'])): ?>
+                        <img src="assets/images/<?= htmlspecialchars($cat['image']) ?>" alt="<?= htmlspecialchars($cat['name']) ?>">
+                    <?php else: ?>
+                        <img src="assets/images/icon_ns.png" alt="Icon">
+                    <?php endif; ?>
+                    <h3><?= strtoupper(htmlspecialchars($cat['name'])) ?></h3>
+                </div>
+                <div class="right">
+                    <?php foreach ($cat['children'] as $child): ?>
+                        <a href="products.php?category=<?= $child['id'] ?>"><?= htmlspecialchars($child['name']) ?></a>
+                    <?php endforeach; ?>
+                    <a href="products.php?category=<?= $cat['id'] ?>" class="view-all">Xem tất cả ›</a>
+                </div>
             </div>
-            <div class="right">
-                <a href="#">Rau</a>
-                <a href="#">Củ</a>
-                <a href="#">Quả</a>
-                <a href="#" class="view-all">Xem tất cả ›</a>
+
+            <!-- CONTENT -->
+            <div class="category-block-body">
+
+                <!-- BANNER TRÁI -->
+                <div class="category-banner">
+                    <?php if (!empty($cat['image'])): ?>
+                        <img src="assets/images/<?= htmlspecialchars($cat['image']) ?>" alt="Banner <?= htmlspecialchars($cat['name']) ?>">
+                    <?php else: ?>
+                        <img src="assets/images/banner_prduct3.png" alt="Banner">
+                    <?php endif; ?>
+                </div>
+
+                <!-- GRID SẢN PHẨM -->
+                <div class="category-products">
+                    <?php foreach ($cat['products'] as $p): ?>
+                        <?php
+                        $price     = (float)$p['price'];
+                        $salePrice = isset($p['sale_price']) ? (float)$p['sale_price'] : 0;
+                        $hasSale   = $salePrice > 0 && $salePrice < $price;
+                        $offPercent = $hasSale ? round(100 - ($salePrice / $price) * 100) : 0;
+                        $imgPath   = !empty($p['image']) ? 'assets/images/' . $p['image'] : 'assets/images/1.jpg';
+
+                        $displayMin = isset($p['price_min']) && $p['price_min'] > 0 ? (float)$p['price_min'] : $price;
+                        $displayMax = isset($p['price_max']) && $p['price_max'] > 0 ? (float)$p['price_max'] : ($hasSale ? $salePrice : $price);
+                        ?>
+                        <a href="product-detail.php?id=<?= (int)$p['id'] ?>" class="product-item">
+                            <div class="product-thumb">
+                                <?php if ($hasSale): ?>
+                                <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
+                                <span class="sale-text">-<?= $offPercent ?>%</span>
+                                <?php endif; ?>
+                                <img src="<?= htmlspecialchars($imgPath) ?>" class="product-img" alt="<?= htmlspecialchars($p['name']) ?>">
+                            </div>
+                            <p class="product-name"><?= htmlspecialchars($p['name']) ?></p>
+                            <p class="product-price">
+                                <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                            </p>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+
             </div>
         </div>
-
-        <!-- CONTENT -->
-        <div class="category-block-body">
-
-            <!-- BANNER TRÁI -->
-            <div class="category-banner">
-                <img src="assets/images/banner_prduct3.png" alt="Banner trái cây">
-            </div>
-
-            <!-- GRID SẢN PHẨM -->
-            <div class="category-products">
-                <?php foreach ($blockProducts as $p): ?>
-                    <?php
-                    $price     = (float)$p['price'];
-                    $salePrice = isset($p['sale_price']) ? (float)$p['sale_price'] : 0;
-                    $hasSale   = $salePrice > 0 && $salePrice < $price;
-                    $offPercent = $hasSale ? round(100 - ($salePrice / $price) * 100) : 0;
-                    $imgPath   = !empty($p['image']) ? 'assets/images/' . $p['image'] : 'assets/images/1.jpg';
-
-                    $displayMin = isset($p['price_min']) && $p['price_min'] > 0 ? (float)$p['price_min'] : $price;
-                    $displayMax = isset($p['price_max']) && $p['price_max'] > 0 ? (float)$p['price_max'] : ($hasSale ? $salePrice : $price);
-                    ?>
-                    <a href="product-detail.php?id=<?= (int)$p['id'] ?>" class="product-item">
-                        <div class="product-thumb">
-                            <?php if ($hasSale): ?>
-                            <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
-                            <span class="sale-text">-<?= $offPercent ?>%</span>
-                            <?php endif; ?>
-                            <img src="<?= htmlspecialchars($imgPath) ?>" class="product-img" alt="<?= htmlspecialchars($p['name']) ?>">
-                        </div>
-                        <p class="product-name"><?= htmlspecialchars($p['name']) ?></p>
-                        <p class="product-price">
-                            <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
-                        </p>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-
-        </div>
-    </div>
-</section>
+    </section>
+    <?php endif; ?>
+<?php endforeach; ?>
 
 <!-- ===== TIN TỨC ===== -->
 <section class="news-block">
@@ -237,26 +236,28 @@ include 'includes/header.php';
         <div class="news-carousel">
             <div class="news-track" id="newsTrack">
                 <?php
-                // Hiện tại tin tức vẫn dùng dữ liệu mẫu tĩnh
-                $news = [
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                    ['title'=>'10 loại rau củ quả tốt cho cơ thể','date'=>'Tháng 8 3, 2022'],
-                ];
-
-                foreach ($news as $n):
-                    ?>
-                    <div class="news-card">
-                        <div class="news-thumb">
-                            <img src="assets/images/lesterblur__2.jpg" alt="<?= $n['title'] ?>">
-                        </div>
-                        <h4 class="news-title"><?= $n['title'] ?></h4>
-                        <p class="news-date"><?= $n['date'] ?></p>
-                    </div>
-                <?php endforeach; ?>
+                // Lấy tin tức từ database
+                $newsData = getNews($conn, ['per_page' => 6, 'status' => 'published']);
+                $news = $newsData['news'];
+                
+                if (empty($news)) {
+                    // Fallback nếu không có tin tức
+                    echo '<p class="text-center">Chưa có tin tức nào.</p>';
+                } else {
+                    foreach ($news as $n):
+                        $imgPath = !empty($n['featured_image']) ? 'assets/images/' . $n['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                        $date = $n['published_at'] ? date('d/m/Y', strtotime($n['published_at'])) : date('d/m/Y', strtotime($n['created_at']));
+                        ?>
+                        <a href="news-detail.php?slug=<?= htmlspecialchars($n['slug']) ?>" class="news-card">
+                            <div class="news-thumb">
+                                <img src="<?= htmlspecialchars($imgPath) ?>" alt="<?= htmlspecialchars($n['title']) ?>">
+                            </div>
+                            <h4 class="news-title"><?= htmlspecialchars($n['title']) ?></h4>
+                            <p class="news-date"><?= $date ?></p>
+                        </a>
+                    <?php endforeach;
+                }
+                ?>
             </div>
         </div>
 

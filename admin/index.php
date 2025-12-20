@@ -1,11 +1,81 @@
 <?php
 session_start();
 require_once '../includes/auth.php';
+require_once '../config/database.php';
 
 // Kiểm tra quyền admin
 requireAdmin();
 
 $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
+
+// Kết nối database
+$conn = connectDB();
+
+// Thống kê tổng quan
+// Tổng số người dùng
+$userCountSql = "SELECT COUNT(*) as total FROM users WHERE status = 1";
+$userResult = $conn->query($userCountSql);
+$userCount = $userResult->fetch_assoc()['total'];
+
+// Tổng số đơn hàng
+$orderCountSql = "SELECT COUNT(*) as total FROM orders";
+$orderResult = $conn->query($orderCountSql);
+$orderCount = $orderResult->fetch_assoc()['total'];
+
+// Tổng số sản phẩm
+$productCountSql = "SELECT COUNT(*) as total FROM products WHERE status = 'active'";
+$productResult = $conn->query($productCountSql);
+$productCount = $productResult->fetch_assoc()['total'];
+
+// Tổng doanh thu (từ các đơn hàng đã giao)
+$revenueSql = "SELECT SUM(total) as total FROM orders WHERE status = 'delivered' AND payment_status = 'paid'";
+$revenueResult = $conn->query($revenueSql);
+$revenue = $revenueResult->fetch_assoc()['total'] ?? 0;
+
+// Đơn hàng trong tháng này
+$monthOrdersSql = "SELECT COUNT(*) as total FROM orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())";
+$monthOrdersResult = $conn->query($monthOrdersSql);
+$monthOrders = $monthOrdersResult->fetch_assoc()['total'];
+
+// Đơn hàng gần đây
+$recentOrdersSql = "SELECT o.*, 
+                    (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as item_count
+                    FROM orders o 
+                    ORDER BY o.created_at DESC 
+                    LIMIT 10";
+$recentOrdersResult = $conn->query($recentOrdersSql);
+$recentOrders = [];
+while ($row = $recentOrdersResult->fetch_assoc()) {
+    $recentOrders[] = $row;
+}
+
+// Thống kê theo trạng thái đơn hàng
+$statusStatsSql = "SELECT status, COUNT(*) as count FROM orders GROUP BY status";
+$statusStatsResult = $conn->query($statusStatsSql);
+$statusStats = [];
+while ($row = $statusStatsResult->fetch_assoc()) {
+    $statusStats[$row['status']] = $row['count'];
+}
+
+// Thống kê liên hệ mới
+$newContactSql = "SELECT COUNT(*) as total FROM contact WHERE status = 'new'";
+$newContactResult = $conn->query($newContactSql);
+$newContactCount = $newContactResult->fetch_assoc()['total'];
+
+// Thống kê tin tức
+$newsCountSql = "SELECT COUNT(*) as total FROM news WHERE status = 'published'";
+$newsResult = $conn->query($newsCountSql);
+$newsCount = $newsResult->fetch_assoc()['total'];
+
+// Thống kê tuyển dụng
+$recruitmentCountSql = "SELECT COUNT(*) as total FROM recruitment WHERE status = 'open'";
+$recruitmentResult = $conn->query($recruitmentCountSql);
+$recruitmentCount = $recruitmentResult->fetch_assoc()['total'];
+
+// Thống kê đánh giá chờ duyệt
+$pendingReviewsSql = "SELECT COUNT(*) as total FROM reviews WHERE status = 'pending'";
+$pendingReviewsResult = $conn->query($pendingReviewsSql);
+$pendingReviewsCount = $pendingReviewsResult->fetch_assoc()['total'];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -174,15 +244,12 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                     <i class="ni ni-circle-08 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
                   </div>
                   <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data - replace with actual database query
-                    echo number_format(1600);
-                    ?>
+                    <?= number_format($userCount) ?>
                   </h5>
                   <span class="text-white text-sm">Người dùng hoạt động</span>
                 </div>
                 <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+55%</p>
+                  <a href="users.php" class="text-white text-sm text-end font-weight-bolder mt-auto mb-0 d-block">Xem tất cả</a>
                 </div>
               </div>
             </div>
@@ -198,15 +265,12 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                     <i class="ni ni-cart text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
                   </div>
                   <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(2300);
-                    ?>
+                    <?= number_format($orderCount) ?>
                   </h5>
                   <span class="text-white text-sm">Đơn hàng</span>
                 </div>
                 <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+15%</p>
+                  <a href="orders.php" class="text-white text-sm text-end font-weight-bolder mt-auto mb-0 d-block">Xem tất cả</a>
                 </div>
               </div>
             </div>
@@ -222,15 +286,12 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                     <i class="ni ni-box-2 text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
                   </div>
                   <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(850);
-                    ?>
+                    <?= number_format($productCount) ?>
                   </h5>
                   <span class="text-white text-sm">Sản phẩm</span>
                 </div>
                 <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+12%</p>
+                  <a href="products.php" class="text-white text-sm text-end font-weight-bolder mt-auto mb-0 d-block">Xem tất cả</a>
                 </div>
               </div>
             </div>
@@ -246,15 +307,12 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                     <i class="ni ni-money-coins text-dark text-gradient text-lg opacity-10" aria-hidden="true"></i>
                   </div>
                   <h5 class="text-white font-weight-bolder mb-0 mt-3">
-                    <?php
-                    // Mock data
-                    echo number_format(125000000, 0, ',', '.') . '₫';
-                    ?>
+                    <?= number_format($revenue, 0, ',', '.') ?>₫
                   </h5>
                   <span class="text-white text-sm">Doanh thu</span>
                 </div>
                 <div class="col-4">
-                  <p class="text-white text-sm text-end font-weight-bolder mt-auto mb-0">+24%</p>
+                  <span class="text-white text-sm text-end font-weight-bolder mt-auto mb-0 d-block">Đã giao</span>
                 </div>
               </div>
             </div>
@@ -272,7 +330,7 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                   <h6>Đơn hàng gần đây</h6>
                   <p class="text-sm mb-0">
                     <i class="fa fa-check text-info" aria-hidden="true"></i>
-                    <span class="font-weight-bold ms-1">30 đơn</span> trong tháng này
+                    <span class="font-weight-bold ms-1"><?= $monthOrders ?> đơn</span> trong tháng này
                   </p>
                 </div>
               </div>
@@ -291,47 +349,130 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
                   </thead>
                   <tbody>
                     <?php
-                    // Mock data - replace with actual database query
-                    $orders = [
-                      ['id' => '#1079', 'customer' => 'Nguyễn Văn A', 'total' => 130000, 'status' => 'Đã giao', 'date' => '19/12/2025'],
-                      ['id' => '#1080', 'customer' => 'Trần Thị B', 'total' => 250000, 'status' => 'Đang giao', 'date' => '19/12/2025'],
-                      ['id' => '#1081', 'customer' => 'Lê Văn C', 'total' => 180000, 'status' => 'Chờ xử lý', 'date' => '18/12/2025'],
-                      ['id' => '#1082', 'customer' => 'Phạm Thị D', 'total' => 320000, 'status' => 'Đã giao', 'date' => '18/12/2025'],
-                      ['id' => '#1083', 'customer' => 'Hoàng Văn E', 'total' => 150000, 'status' => 'Đã hủy', 'date' => '17/12/2025'],
-                    ];
-                    foreach ($orders as $order):
-                      $statusClass = [
-                        'Đã giao' => 'bg-gradient-success',
-                        'Đang giao' => 'bg-gradient-info',
-                        'Chờ xử lý' => 'bg-gradient-warning',
-                        'Đã hủy' => 'bg-gradient-danger'
-                      ];
-                      $statusBg = $statusClass[$order['status']] ?? 'bg-gradient-secondary';
+                    if (empty($recentOrders)) {
+                        echo '<tr><td colspan="5" class="text-center py-4">Chưa có đơn hàng nào</td></tr>';
+                    } else {
+                        $statusLabels = [
+                            'pending' => 'Chờ xử lý',
+                            'processing' => 'Đang xử lý',
+                            'shipped' => 'Đang giao',
+                            'delivered' => 'Đã giao',
+                            'cancelled' => 'Đã hủy'
+                        ];
+                        $statusClass = [
+                            'pending' => 'bg-gradient-warning',
+                            'processing' => 'bg-gradient-info',
+                            'shipped' => 'bg-gradient-primary',
+                            'delivered' => 'bg-gradient-success',
+                            'cancelled' => 'bg-gradient-danger'
+                        ];
+                        
+                        foreach ($recentOrders as $order):
+                            $status = $order['status'];
+                            $statusLabel = $statusLabels[$status] ?? $status;
+                            $statusBg = $statusClass[$status] ?? 'bg-gradient-secondary';
+                            $orderDate = date('d/m/Y', strtotime($order['created_at']));
+                        ?>
+                        <tr>
+                          <td>
+                            <div class="d-flex px-2 py-1">
+                              <div class="d-flex flex-column justify-content-center">
+                                <h6 class="mb-0 text-sm">
+                                  <a href="order_detail.php?id=<?= $order['id'] ?>" class="text-dark">
+                                    <?= htmlspecialchars($order['order_number']) ?>
+                                  </a>
+                                </h6>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($order['customer_name']) ?></p>
+                            <p class="text-xs text-secondary mb-0"><?= htmlspecialchars($order['customer_email']) ?></p>
+                          </td>
+                          <td class="align-middle text-center text-sm">
+                            <span class="text-xs font-weight-bold"><?= number_format($order['total'], 0, ',', '.') ?>₫</span>
+                            <p class="text-xs text-secondary mb-0"><?= $order['item_count'] ?> sản phẩm</p>
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="badge badge-sm <?= $statusBg ?>"><?= htmlspecialchars($statusLabel) ?></span>
+                          </td>
+                          <td class="align-middle text-center">
+                            <span class="text-secondary text-xs font-weight-bold"><?= htmlspecialchars($orderDate) ?></span>
+                          </td>
+                        </tr>
+                        <?php endforeach;
+                    }
                     ?>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm"><?= htmlspecialchars($order['id']) ?></h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($order['customer']) ?></p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold"><?= number_format($order['total'], 0, ',', '.') ?>₫</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="badge badge-sm <?= $statusBg ?>"><?= htmlspecialchars($order['status']) ?></span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-xs font-weight-bold"><?= htmlspecialchars($order['date']) ?></span>
-                      </td>
-                    </tr>
-                    <?php endforeach; ?>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Statistics -->
+      <div class="row mt-4">
+        <div class="col-lg-3 col-md-6 col-12 mb-4">
+          <div class="card">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center">
+                <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md me-3">
+                  <i class="ni ni-email-83 text-white text-lg opacity-10"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">Liên hệ mới</h6>
+                  <h4 class="mb-0"><?= $newContactCount ?></h4>
+                  <a href="contact.php" class="text-sm">Xem tất cả</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12 mb-4">
+          <div class="card">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center">
+                <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md me-3">
+                  <i class="ni ni-paper-diploma text-white text-lg opacity-10"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">Tin tức</h6>
+                  <h4 class="mb-0"><?= $newsCount ?></h4>
+                  <a href="news.php" class="text-sm">Xem tất cả</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12 mb-4">
+          <div class="card">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center">
+                <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md me-3">
+                  <i class="ni ni-briefcase-24 text-white text-lg opacity-10"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">Tuyển dụng</h6>
+                  <h4 class="mb-0"><?= $recruitmentCount ?></h4>
+                  <a href="recruitment.php" class="text-sm">Xem tất cả</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12 mb-4">
+          <div class="card">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center">
+                <div class="icon icon-shape bg-gradient-danger shadow text-center border-radius-md me-3">
+                  <i class="ni ni-star text-white text-lg opacity-10"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0">Đánh giá chờ duyệt</h6>
+                  <h4 class="mb-0"><?= $pendingReviewsCount ?></h4>
+                  <a href="reviews.php" class="text-sm">Xem tất cả</a>
+                </div>
               </div>
             </div>
           </div>
@@ -358,4 +499,10 @@ $pageTitle = "Admin Dashboard - Bách Hóa Xanh";
   <script src="../assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
 </body>
 </html>
+<?php
+// Đóng kết nối database
+if (isset($conn)) {
+    closeDB($conn);
+}
+?>
 
