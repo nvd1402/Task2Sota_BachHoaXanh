@@ -119,6 +119,8 @@ function getProducts($conn, $options = []) {
     $search = $options['search'] ?? '';
     $price_min = $options['price_min'] ?? null;
     $price_max = $options['price_max'] ?? null;
+    $brand_id = $options['brand_id'] ?? null;
+    $size_id = $options['size_id'] ?? null;
     $sort = $options['sort'] ?? 'latest';
     $page = $options['page'] ?? 1;
     $perPage = $options['per_page'] ?? 16;
@@ -196,10 +198,27 @@ function getProducts($conn, $options = []) {
         $types .= 'ss';
     }
     
+    // Lọc theo thương hiệu
+    if ($brand_id !== null) {
+        $where[] = "p.brand_id = ?";
+        $params[] = $brand_id;
+        $types .= 'i';
+    }
+    
+    // Lọc theo kích thước
+    if ($size_id !== null) {
+        $where[] = "p.size_id = ?";
+        $params[] = $size_id;
+        $types .= 'i';
+    }
+    
     $whereClause = implode(' AND ', $where);
     
-    // Sắp xếp
+    // Sắp xếp và JOIN cần thiết
+    $joinClause = "";
     $orderBy = "p.created_at DESC";
+    $groupBy = "";
+    
     switch ($sort) {
         case 'price_asc':
             $orderBy = "COALESCE(p.sale_price, p.price) ASC";
@@ -213,14 +232,33 @@ function getProducts($conn, $options = []) {
         case 'name_desc':
             $orderBy = "p.name DESC";
             break;
+        case 'popular':
+            // Sắp xếp theo số lượng bán (tổng quantity từ order_items)
+            $joinClause = "LEFT JOIN order_items oi ON p.id = oi.product_id 
+                          LEFT JOIN orders o ON oi.order_id = o.id AND o.status IN ('processing', 'shipped', 'delivered')";
+            $orderBy = "COALESCE(SUM(oi.quantity), 0) DESC";
+            $groupBy = "GROUP BY p.id";
+            break;
+        case 'rating':
+            // Sắp xếp theo xếp hạng trung bình từ reviews
+            $joinClause = "LEFT JOIN reviews r ON p.id = r.product_id AND r.status = 'approved'";
+            $orderBy = "COALESCE(AVG(r.rating), 0) DESC, COUNT(r.id) DESC";
+            $groupBy = "GROUP BY p.id";
+            break;
         case 'latest':
-        default:
             $orderBy = "p.created_at DESC";
+            break;
+        case 'default':
+        default:
+            $orderBy = "p.id DESC";
             break;
     }
     
     // Đếm tổng số sản phẩm
-    $countSql = "SELECT COUNT(*) as total FROM products p WHERE $whereClause";
+    $countSql = "SELECT COUNT(DISTINCT p.id) as total 
+                 FROM products p 
+                 $joinClause
+                 WHERE $whereClause";
     $countStmt = $conn->prepare($countSql);
     if (!empty($params)) {
         $countStmt->bind_param($types, ...$params);
@@ -232,11 +270,25 @@ function getProducts($conn, $options = []) {
     $countStmt->close();
     
     // Lấy danh sách sản phẩm
-    $sql = "SELECT p.* 
-            FROM products p 
-            WHERE $whereClause 
-            ORDER BY $orderBy
-            LIMIT ? OFFSET ?";
+    $sql = "SELECT p.*";
+    
+    // Thêm các trường tính toán nếu cần
+    if ($sort === 'popular') {
+        $sql .= ", COALESCE(SUM(oi.quantity), 0) as total_sold";
+    } elseif ($sort === 'rating') {
+        $sql .= ", COALESCE(AVG(r.rating), 0) as avg_rating, COUNT(r.id) as review_count";
+    }
+    
+    $sql .= " FROM products p 
+              $joinClause
+              WHERE $whereClause";
+    
+    if (!empty($groupBy)) {
+        $sql .= " $groupBy";
+    }
+    
+    $sql .= " ORDER BY $orderBy
+              LIMIT ? OFFSET ?";
     
     $stmt = $conn->prepare($sql);
     $params[] = $perPage;

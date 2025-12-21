@@ -34,6 +34,22 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link <?= strpos(basename($_SERVER['PHP_SELF']), 'brand') !== false ? 'active' : '' ?>" href="brands.php">
+          <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-certificate text-dark text-sm opacity-10"></i>
+          </div>
+          <span class="nav-link-text ms-1">Thương hiệu</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link <?= strpos(basename($_SERVER['PHP_SELF']), 'size') !== false ? 'active' : '' ?>" href="sizes.php">
+          <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-ruler text-dark text-sm opacity-10"></i>
+          </div>
+          <span class="nav-link-text ms-1">Kích thước</span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link <?= strpos(basename($_SERVER['PHP_SELF']), 'order') !== false ? 'active' : '' ?>" href="orders.php">
           <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
             <i class="fas fa-shopping-cart text-dark text-sm opacity-10"></i>

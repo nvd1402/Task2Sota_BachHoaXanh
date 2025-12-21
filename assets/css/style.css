@@ -579,6 +579,16 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     opacity: 0.5;
 }
 
+/* Làm mờ floating icons khi products sidebar mở (không ẩn) */
+.products-sidebar.active ~ .site-footer .floating-icons,
+body:has(.products-sidebar.active) .floating-icons,
+.sidebar-overlay.active ~ .site-footer .floating-icons,
+body:has(.sidebar-overlay.active) .floating-icons {
+    z-index: 9997;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
 .floating-icon {
     display: block;
     width: 45px;
@@ -2134,9 +2144,101 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     align-items: start;
 }
 
+/* FILTER TOGGLE BUTTON MOBILE */
+.filter-toggle-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #3da04d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.filter-toggle-btn:hover {
+    background: #2e7d32;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(61, 160, 77, 0.3);
+}
+
+.filter-toggle-btn i,
+.filter-toggle-btn svg {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.filter-toggle-btn span {
+    font-weight: 600;
+}
+
+/* SIDEBAR OVERLAY MOBILE - Giống header sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+}
+
+.sidebar-overlay.active {
+    display: block !important;
+}
+
+/* PRODUCTS SIDEBAR CLOSE BUTTON - Ngoài sidebar, góc trên bên phải màn hình (giống header) */
+.products-sidebar-close {
+    display: none !important;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002 !important;
+    padding: 0;
+    pointer-events: auto !important;
+}
+
+.products-sidebar-close.show {
+    display: flex !important;
+    pointer-events: auto !important;
+    z-index: 10002 !important;
+}
+
+.products-sidebar-close:hover {
+    opacity: 0.8;
+}
+
+.products-sidebar-close i {
+    color: #fff;
+}
+
 /* SIDEBAR */
 .products-sidebar {
     background: #fff;
+    transition: left 0.3s ease, transform 0.3s ease;
+    position: relative;
 }
 
 .sidebar-section {
@@ -2240,6 +2342,93 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     color: #666;
 }
 
+.sort-dropdown-wrapper {
+    position: relative;
+}
+
+.sort-dropdown-custom {
+    position: relative;
+    min-width: 250px;
+}
+
+.sort-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.sort-dropdown-btn:hover {
+    border-color: #3da04d;
+}
+
+.sort-dropdown-btn i {
+    font-size: 12px;
+    color: #666;
+    transition: transform 0.2s ease;
+    margin-left: 10px;
+}
+
+.sort-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.sort-dropdown-menu.show {
+    display: block;
+}
+
+.sort-option {
+    display: block;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sort-option:last-child {
+    border-bottom: none;
+}
+
+.sort-option:hover {
+    background: #f5f5f5;
+    color: #3da04d;
+}
+
+.sort-option.active {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.sort-option.active:hover {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Legacy support */
 .sort-dropdown {
     min-width: 200px;
 }
@@ -2334,15 +2523,17 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     align-items: center;
     gap: 8px;
     margin-top: 40px;
+    flex-wrap: wrap;
 }
 
 .page-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
+    min-width: 40px;
     height: 40px;
-    border-radius: 50%;
+    padding: 0 12px;
+    border-radius: 8px;
     background: #fff;
     border: 1px solid #ddd;
     color: #333;
@@ -2350,18 +2541,29 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .page-btn:hover {
     background: #3da04d;
     border-color: #3da04d;
     color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(61, 160, 77, 0.2);
 }
 
 .page-btn.active {
     background: #3da04d;
     border-color: #3da04d;
     color: #fff;
+    font-weight: 600;
+}
+
+.page-btn:disabled,
+.page-btn[style*="cursor: default"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .page-btn i {
@@ -2390,19 +2592,121 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
 }
 
 @media (max-width: 768px) {
+    /* Filter Button */
+    .filter-toggle-btn {
+        display: flex !important;
+        width: 100%;
+        justify-content: center;
+        position: relative !important;
+        z-index: 1000 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(61, 160, 77, 0.3);
+    }
+    
+    .filter-toggle-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Sidebar Overlay - Chỉ hiển thị khi active */
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar-overlay.active {
+        display: block !important;
+    }
+    
+    /* Layout */
+    .products-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    /* Products Sidebar - Giống header sidebar */
+    .products-sidebar {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 66.67%;
+        height: 100vh;
+        background: #fff;
+        z-index: 10000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        overflow-y: auto;
+        padding: 0;
+    }
+    
+    /* Padding cho nội dung sidebar trên mobile */
+    @media (max-width: 768px) {
+        .products-sidebar .sidebar-section {
+            margin: 15px;
+        }
+    }
+    
+    .products-sidebar.active {
+        left: 0;
+    }
+    
+    /* Đảm bảo sidebar không bị ẩn trên desktop */
+    @media (min-width: 769px) {
+        .products-sidebar {
+            position: relative !important;
+            left: 0 !important;
+            width: auto !important;
+            height: auto !important;
+            display: block !important;
+            overflow-y: visible !important;
+            box-shadow: none !important;
+        }
+        
+        .products-sidebar-close {
+            display: none !important;
+        }
+        
+        .sidebar-overlay {
+            display: none !important;
+        }
+    }
+    
+    .products-main {
+        width: 100%;
+    }
+    
     .products-topbar {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
 
-    .sort-dropdown {
+    .sort-dropdown,
+    .sort-dropdown-wrapper {
         width: 100%;
     }
+    
+    .sort-dropdown-custom {
+        min-width: 100%;
+    }
 
+    /* Products Grid - 2 columns on mobile */
     .products-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 15px;
+    }
+    
+    .products-pagination {
+        gap: 6px;
+        margin-top: 30px;
+    }
+    
+    .page-btn {
+        min-width: 36px;
+        height: 36px;
+        font-size: 13px;
+        padding: 0 8px;
     }
 
     .products-grid .product-thumb {
@@ -2428,11 +2732,35 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
     .products-grid .product-price {
         font-size: 13px;
     }
+    
+    /* Sidebar Section */
+    .sidebar-section {
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-title {
+        font-size: 13px;
+        padding: 10px 14px;
+    }
 }
 
 @media (max-width: 480px) {
+    /* Giữ nguyên 2 cột trên mobile nhỏ */
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .products-grid .product-thumb {
+        height: 100px;
+    }
+    
+    .products-grid .product-name {
+        font-size: 11px;
+    }
+    
+    .products-grid .product-price {
+        font-size: 12px;
     }
 }
 

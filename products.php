@@ -12,7 +12,9 @@ $conn = connectDB();
 $category_id = isset($_GET['category']) ? (int)$_GET['category'] : null;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $price_filter = isset($_GET['price']) ? trim($_GET['price']) : '';
-$sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'latest';
+$brand_id = isset($_GET['brand']) ? (int)$_GET['brand'] : null;
+$size_id = isset($_GET['size']) ? (int)$_GET['size'] : null;
+$sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'default';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
@@ -28,15 +30,38 @@ if (!empty($price_filter) && strpos($price_filter, '-') !== false) {
 // Lấy danh sách danh mục (cha và con)
 $categories = getAllCategoriesGrouped($conn);
 
+// Lấy danh sách thương hiệu
+$brandsQuery = "SELECT * FROM brands WHERE status = 'active' ORDER BY name ASC";
+$brandsResult = $conn->query($brandsQuery);
+$brands = [];
+if ($brandsResult && $brandsResult->num_rows > 0) {
+    while ($row = $brandsResult->fetch_assoc()) {
+        $brands[] = $row;
+    }
+}
+
+// Lấy danh sách kích thước
+$sizesQuery = "SELECT * FROM sizes WHERE status = 'active' ORDER BY name ASC";
+$sizesResult = $conn->query($sizesQuery);
+$sizes = [];
+if ($sizesResult && $sizesResult->num_rows > 0) {
+    while ($row = $sizesResult->fetch_assoc()) {
+        $sizes[] = $row;
+    }
+}
+
 // Lấy danh sách sản phẩm
+$perPage = 16; // Số sản phẩm mỗi trang
 $options = [
     'category_id' => $category_id,
     'search' => $search,
     'price_min' => $price_min,
     'price_max' => $price_max,
+    'brand_id' => $brand_id,
+    'size_id' => $size_id,
     'sort' => $sort,
     'page' => $page,
-    'per_page' => 16
+    'per_page' => $perPage
 ];
 $productsData = getProducts($conn, $options);
 $products = $productsData['products'];
@@ -58,7 +83,6 @@ include 'includes/header.php';
             
             <!-- SIDEBAR -->
             <aside class="products-sidebar">
-                
                 <!-- DANH MỤC SẢN PHẨM -->
                 <div class="sidebar-section">
                     <h3 class="sidebar-title">DANH MỤC SẢN PHẨM</h3>
@@ -131,25 +155,15 @@ include 'includes/header.php';
                     <h3 class="sidebar-title">TÌM THEO KÍCH THƯỚC</h3>
                     <div class="filter-group">
                         <label class="filter-option">
-                            <input type="radio" name="size" value="L">
-                            <span>L</span>
+                            <input type="radio" name="size" value="" <?= empty($size_id) ? 'checked' : '' ?>>
+                            <span>Tất cả kích thước</span>
                         </label>
+                        <?php foreach ($sizes as $size): ?>
                         <label class="filter-option">
-                            <input type="radio" name="size" value="M">
-                            <span>M</span>
+                            <input type="radio" name="size" value="<?= $size['id'] ?>" <?= $size_id == $size['id'] ? 'checked' : '' ?>>
+                            <span><?= htmlspecialchars($size['name']) ?></span>
                         </label>
-                        <label class="filter-option">
-                            <input type="radio" name="size" value="S">
-                            <span>S</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="radio" name="size" value="XL">
-                            <span>XL</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="radio" name="size" value="XXL">
-                            <span>XXL</span>
-                        </label>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
@@ -158,25 +172,15 @@ include 'includes/header.php';
                     <h3 class="sidebar-title">THƯƠNG HIỆU</h3>
                     <div class="filter-group">
                         <label class="filter-option">
-                            <input type="radio" name="brand" value="5TFOODS">
-                            <span>5TFOODS</span>
+                            <input type="radio" name="brand" value="" <?= empty($brand_id) ? 'checked' : '' ?>>
+                            <span>Tất cả thương hiệu</span>
                         </label>
+                        <?php foreach ($brands as $brand): ?>
                         <label class="filter-option">
-                            <input type="radio" name="brand" value="HAIHACO">
-                            <span>HAIHACO</span>
+                            <input type="radio" name="brand" value="<?= $brand['id'] ?>" <?= $brand_id == $brand['id'] ? 'checked' : '' ?>>
+                            <span><?= htmlspecialchars($brand['name']) ?></span>
                         </label>
-                        <label class="filter-option">
-                            <input type="radio" name="brand" value="KIDO">
-                            <span>KIDO</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="radio" name="brand" value="Nutifood">
-                            <span>Nutifood</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="radio" name="brand" value="Vissan">
-                            <span>Vissan</span>
-                        </label>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
@@ -185,11 +189,31 @@ include 'includes/header.php';
             <!-- MAIN CONTENT -->
             <div class="products-main">
                 
+                <!-- FILTER BUTTON MOBILE -->
+                <button class="filter-toggle-btn" id="filterToggleBtn" type="button">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zM3 6.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM1 2.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    <span>Filter</span>
+                </button>
+                
+                <!-- OVERLAY MOBILE -->
+                <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeProductsSidebar()"></div>
+                
+                <!-- CLOSE BUTTON MOBILE - Ngoài sidebar -->
+                <button class="products-sidebar-close" id="productsSidebarClose" onclick="closeProductsSidebar()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                
                 <!-- TOP BAR -->
                 <div class="products-topbar">
                     <div class="results-info">
                         <?php if ($totalProducts > 0): ?>
-                            <span>Hiển thị <?= ($page - 1) * 16 + 1 ?>-<?= min($page * 16, $totalProducts) ?> của <?= $totalProducts ?> kết quả</span>
+                            <?php 
+                            $start = ($page - 1) * $perPage + 1;
+                            $end = min($page * $perPage, $totalProducts);
+                            ?>
+                            <span>Hiển thị <?= $start ?>-<?= $end ?> trong tổng số <?= $totalProducts ?> kết quả</span>
                         <?php else: ?>
                             <span>Không tìm thấy sản phẩm nào</span>
                         <?php endif; ?>
@@ -197,13 +221,33 @@ include 'includes/header.php';
                             <span class="ms-2 text-muted">- <?= htmlspecialchars($currentCategory['name']) ?></span>
                         <?php endif; ?>
                     </div>
-                    <div class="sort-dropdown">
-                        <select class="form-select" id="sortSelect">
-                            <option value="latest" <?= $sort === 'latest' ? 'selected' : '' ?>>Mới nhất</option>
-                            <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>Giá: thấp đến cao</option>
-                            <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Giá: cao đến thấp</option>
-                            <option value="name_asc" <?= $sort === 'name_asc' ? 'selected' : '' ?>>Tên: A-Z</option>
-                        </select>
+                    <div class="sort-dropdown-wrapper">
+                        <div class="sort-dropdown-custom" id="sortDropdown">
+                            <button class="sort-dropdown-btn" type="button" id="sortDropdownBtn">
+                                <span id="sortDropdownText">
+                                    <?php
+                                    $sortLabels = [
+                                        'default' => 'Sắp xếp mặc định',
+                                        'popular' => 'Sắp xếp theo mức độ phổ biến',
+                                        'rating' => 'Sắp xếp theo xếp hạng trung bình',
+                                        'latest' => 'Sắp xếp theo mới nhất',
+                                        'price_asc' => 'Sắp xếp theo giá: từ thấp đến cao',
+                                        'price_desc' => 'Sắp xếp theo giá: từ cao đến thấp'
+                                    ];
+                                    echo $sortLabels[$sort] ?? 'Sắp xếp mặc định';
+                                    ?>
+                                </span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="sort-dropdown-menu" id="sortDropdownMenu">
+                                <a href="#" class="sort-option <?= $sort === 'default' ? 'active' : '' ?>" data-sort="default">Sắp xếp mặc định</a>
+                                <a href="#" class="sort-option <?= $sort === 'popular' ? 'active' : '' ?>" data-sort="popular">Sắp xếp theo mức độ phổ biến</a>
+                                <a href="#" class="sort-option <?= $sort === 'rating' ? 'active' : '' ?>" data-sort="rating">Sắp xếp theo xếp hạng trung bình</a>
+                                <a href="#" class="sort-option <?= $sort === 'latest' ? 'active' : '' ?>" data-sort="latest">Sắp xếp theo mới nhất</a>
+                                <a href="#" class="sort-option <?= $sort === 'price_asc' ? 'active' : '' ?>" data-sort="price_asc">Sắp xếp theo giá: từ thấp đến cao</a>
+                                <a href="#" class="sort-option <?= $sort === 'price_desc' ? 'active' : '' ?>" data-sort="price_desc">Sắp xếp theo giá: từ cao đến thấp</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -249,7 +293,9 @@ include 'includes/header.php';
                     if ($category_id) $paginationParams[] = 'category=' . $category_id;
                     if ($search) $paginationParams[] = 'search=' . urlencode($search);
                     if ($price_filter) $paginationParams[] = 'price=' . urlencode($price_filter);
-                    if ($sort && $sort !== 'latest') $paginationParams[] = 'sort=' . urlencode($sort);
+                    if ($brand_id) $paginationParams[] = 'brand=' . $brand_id;
+                    if ($size_id) $paginationParams[] = 'size=' . $size_id;
+                    if ($sort && $sort !== 'default') $paginationParams[] = 'sort=' . urlencode($sort);
                     $paginationQuery = !empty($paginationParams) ? '&' . implode('&', $paginationParams) : '';
                 ?>
                 <div class="products-pagination">
@@ -326,16 +372,153 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Xử lý sắp xếp
-    const sortSelect = document.getElementById('sortSelect');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
+    // Xử lý filter brand
+    const brandFilters = document.querySelectorAll('input[name="brand"]');
+    brandFilters.forEach(function(filter) {
+        filter.addEventListener('change', function() {
             applyFilters();
+        });
+    });
+    
+    // Xử lý filter size
+    const sizeFilters = document.querySelectorAll('input[name="size"]');
+    sizeFilters.forEach(function(filter) {
+        filter.addEventListener('change', function() {
+            applyFilters();
+        });
+    });
+    
+    // Xử lý dropdown sắp xếp custom
+    const sortDropdownBtn = document.getElementById('sortDropdownBtn');
+    const sortDropdownMenu = document.getElementById('sortDropdownMenu');
+    const sortDropdown = document.getElementById('sortDropdown');
+    const sortOptions = document.querySelectorAll('.sort-option');
+    
+    if (sortDropdownBtn && sortDropdownMenu) {
+        // Toggle dropdown
+        sortDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sortDropdownMenu.classList.toggle('show');
+            const icon = sortDropdownBtn.querySelector('i');
+            if (sortDropdownMenu.classList.contains('show')) {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            } else {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            }
+        });
+        
+        // Đóng dropdown khi click bên ngoài
+        document.addEventListener('click', function(e) {
+            if (!sortDropdown.contains(e.target)) {
+                sortDropdownMenu.classList.remove('show');
+                const icon = sortDropdownBtn.querySelector('i');
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            }
+        });
+        
+        // Xử lý chọn option
+        sortOptions.forEach(function(option) {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sortValue = this.getAttribute('data-sort');
+                const sortText = this.textContent;
+                
+                // Cập nhật text hiển thị
+                document.getElementById('sortDropdownText').textContent = sortText;
+                
+                // Cập nhật active state
+                sortOptions.forEach(function(opt) {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Đóng dropdown
+                sortDropdownMenu.classList.remove('show');
+                const icon = sortDropdownBtn.querySelector('i');
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+                
+                // Áp dụng filter
+                applyFilters(sortValue);
+            });
+        });
+    }
+    
+    // Hàm toggle sidebar (giống header sidebar) - Đặt vào window scope để có thể gọi từ onclick
+    window.toggleProductsSidebar = function() {
+        const sidebar = document.querySelector('.products-sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const closeBtn = document.getElementById('productsSidebarClose');
+        if (sidebar && overlay && closeBtn) {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            closeBtn.classList.toggle('show');
+            const open = sidebar.classList.contains('active');
+            document.body.style.overflow = open ? 'hidden' : '';
+            document.body.classList.toggle('products-sidebar-open', open);
+        }
+    };
+
+    // Hàm đóng sidebar (giống header sidebar) - Đặt vào window scope để có thể gọi từ onclick
+    window.closeProductsSidebar = function() {
+        const sidebar = document.querySelector('.products-sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const closeBtn = document.getElementById('productsSidebarClose');
+        if (sidebar && overlay && closeBtn) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            closeBtn.classList.remove('show');
+            document.body.style.overflow = '';
+            document.body.classList.remove('products-sidebar-open');
+        }
+    };
+    
+    // Xử lý toggle sidebar trên mobile
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    
+    if (filterToggleBtn) {
+        filterToggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.toggleProductsSidebar();
+        });
+        
+        // Thêm touch event cho mobile
+        filterToggleBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.toggleProductsSidebar();
+        });
+    }
+    
+    // Đóng sidebar khi click vào link trong sidebar (trừ filter radio)
+    const sidebar = document.querySelector('.products-sidebar');
+    if (sidebar) {
+        const sidebarLinks = sidebar.querySelectorAll('a');
+        sidebarLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                // Chỉ đóng nếu không phải là link filter (radio button)
+                if (!this.closest('.filter-option')) {
+                    setTimeout(function() {
+                        window.closeProductsSidebar();
+                    }, 300);
+                }
+            });
+        });
+        
+        // Đóng sidebar khi nhấn phím ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                window.closeProductsSidebar();
+            }
         });
     }
     
     // Hàm áp dụng filter
-    function applyFilters() {
+    function applyFilters(sortValue = null) {
         const urlParams = new URLSearchParams(window.location.search);
         
         // Lấy giá trị filter giá
@@ -346,11 +529,35 @@ document.addEventListener('DOMContentLoaded', function() {
             urlParams.delete('price');
         }
         
-        // Lấy giá trị sort
-        if (sortSelect && sortSelect.value && sortSelect.value !== 'latest') {
-            urlParams.set('sort', sortSelect.value);
+        // Lấy giá trị filter brand
+        const brandFilter = document.querySelector('input[name="brand"]:checked');
+        if (brandFilter && brandFilter.value) {
+            urlParams.set('brand', brandFilter.value);
         } else {
-            urlParams.delete('sort');
+            urlParams.delete('brand');
+        }
+        
+        // Lấy giá trị filter size
+        const sizeFilter = document.querySelector('input[name="size"]:checked');
+        if (sizeFilter && sizeFilter.value) {
+            urlParams.set('size', sizeFilter.value);
+        } else {
+            urlParams.delete('size');
+        }
+        
+        // Lấy giá trị sort
+        if (sortValue) {
+            if (sortValue !== 'default') {
+                urlParams.set('sort', sortValue);
+            } else {
+                urlParams.delete('sort');
+            }
+        } else {
+            // Nếu không có sortValue, giữ nguyên sort hiện tại
+            const currentSort = urlParams.get('sort');
+            if (!currentSort || currentSort === 'default') {
+                urlParams.delete('sort');
+            }
         }
         
         // Reset về trang 1 khi filter

@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sku = trim($_POST['sku'] ?? '');
     $stock = intval($_POST['stock'] ?? 0);
     $category = trim($_POST['category'] ?? '');
+    $brand_id = !empty($_POST['brand_id']) ? (int)$_POST['brand_id'] : null;
+    $size_id = !empty($_POST['size_id']) ? (int)$_POST['size_id'] : null;
     $status = $_POST['status'] ?? 'active';
     $featured = isset($_POST['featured']) ? 1 : 0;
     
@@ -85,9 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $checkStmt->close();
         
         // Thêm sản phẩm
-        $stmt = $conn->prepare("INSERT INTO products (name, slug, description, short_description, price, sale_price, price_min, price_max, weight_options, promo_heading, promo_content, sku, stock, category, image, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO products (name, slug, description, short_description, price, sale_price, price_min, price_max, weight_options, promo_heading, promo_content, sku, stock, category, brand_id, size_id, image, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
-          "ssssdddddssssiss",
+          "ssssdddddssssiiiss",
           $name,
           $slug,
           $description,
@@ -102,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $sku,
           $stock,
           $category,
+          $brand_id,
+          $size_id,
           $image,
           $status,
           $featured
@@ -362,6 +366,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="mb-3">
                       <label class="form-label">Danh mục</label>
                       <input type="text" name="category" class="form-control" value="<?= htmlspecialchars($_POST['category'] ?? '') ?>" placeholder="VD: Đồ uống, Bánh kẹo...">
+                    </div>
+                    
+                    <?php
+                    // Lấy danh sách brands và sizes
+                    if (!isset($conn)) {
+                        $conn = connectDB();
+                    }
+                    $brandsQuery = "SELECT * FROM brands WHERE status = 'active' ORDER BY name ASC";
+                    $brandsResult = $conn->query($brandsQuery);
+                    $brands = [];
+                    if ($brandsResult && $brandsResult->num_rows > 0) {
+                        while ($row = $brandsResult->fetch_assoc()) {
+                            $brands[] = $row;
+                        }
+                    }
+                    
+                    $sizesQuery = "SELECT * FROM sizes WHERE status = 'active' ORDER BY name ASC";
+                    $sizesResult = $conn->query($sizesQuery);
+                    $sizes = [];
+                    if ($sizesResult && $sizesResult->num_rows > 0) {
+                        while ($row = $sizesResult->fetch_assoc()) {
+                            $sizes[] = $row;
+                        }
+                    }
+                    ?>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Thương hiệu</label>
+                      <select name="brand_id" class="form-control">
+                        <option value="">-- Chọn thương hiệu --</option>
+                        <?php foreach ($brands as $brand): ?>
+                        <option value="<?= $brand['id'] ?>" <?= (isset($_POST['brand_id']) && $_POST['brand_id'] == $brand['id']) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($brand['name']) ?>
+                        </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label">Kích thước</label>
+                      <select name="size_id" class="form-control">
+                        <option value="">-- Chọn kích thước --</option>
+                        <?php foreach ($sizes as $size): ?>
+                        <option value="<?= $size['id'] ?>" <?= (isset($_POST['size_id']) && $_POST['size_id'] == $size['id']) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($size['name']) ?>
+                        </option>
+                        <?php endforeach; ?>
+                      </select>
                     </div>
                     
                     <div class="mb-3">
