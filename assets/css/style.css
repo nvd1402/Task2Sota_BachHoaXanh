@@ -442,7 +442,7 @@ body.hide-header .main-nav {
 .category-toggle {
     background: #2d7a3a;
     color: #fff;
-    padding: 14px 100px 14px 20px;
+    padding: 14px 80px 14px 20px;
     font-size: 14px;
     font-weight: 500;
     text-transform: uppercase;
@@ -876,6 +876,35 @@ body:has(.sidebar-overlay.active) .floating-icons {
     cursor: grab;
 }
 
+/* Tablet */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .hero-carousel {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0 15px;
+    }
+    
+    .category-first-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .category-products-first-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .category-products-remaining {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    
+    .featured-card {
+        flex: 0 0 33.333%;
+    }
+}
+
 @media (min-width: 992px) {
     /* Chừa cột danh mục bên trái và thêm lề phải */
     .hero-carousel {
@@ -921,12 +950,37 @@ body:has(.sidebar-overlay.active) .floating-icons {
     user-select: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
+    .hero-carousel {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0;
+    }
+    
     .hero-carousel .carousel-item img {
         height: auto;
         max-height: none;
         object-fit: contain;
         border-radius: 0;
+    }
+    
+    .featured-section {
+        padding: 15px 0 10px;
+    }
+    
+    .featured-container {
+        padding: 12px 15px;
+        border-width: 2px;
+    }
+    
+    .category-block {
+        margin-top: 5px;
+        margin-bottom: 30px;
+    }
+    
+    .category-block-header h3 {
+        font-size: 16px;
     }
 }
 
@@ -957,9 +1011,14 @@ body:has(.sidebar-overlay.active) .floating-icons {
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .gk-banner {
-        margin: 36px 0;
+        margin: 30px 0;
+    }
+    
+    .gk-banner .container {
+        padding-left: 15px;
+        padding-right: 15px;
     }
     .gk-banner .container {
         padding-left: 12px;
@@ -1019,7 +1078,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
     color: #fff;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .featured-nav {
         display: none;
     }
@@ -1077,7 +1136,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
     justify-content: center;
     background: #ffffff;
     border-radius: 10px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .featured-thumb .featured-product-img,
@@ -1118,10 +1177,10 @@ body:has(.sidebar-overlay.active) .floating-icons {
 .featured-thumb .sale-badge,
 .product-thumb .sale-badge {
     position: absolute;
-    /* Đặt badge sát trên nhưng không tràn quá nhiều */
-    top: 4px;
+    /* Đặt badge trong card */
+    top: 8px;
     right: 8px;
-    width: 48px;
+    width: 36px;
     height: auto;
     z-index: 20; /* luôn nằm trên ảnh */
     display: block;
@@ -1131,15 +1190,19 @@ body:has(.sidebar-overlay.active) .floating-icons {
 .featured-thumb .sale-text,
 .product-thumb .sale-text {
     position: absolute;
-    /* Canh giữa PHẦN TRÒN của ảnh sale (không phải giữa card) */
-    top: 25px; /* đẩy xuống dưới một chút */
-    right: 18px;
-    transform: none;
+    /* Căn giữa text trong badge bg_sale */
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     z-index: 21;
-    line-height: 0.3;
+    line-height: 1;
     pointer-events: none;
 }
 
@@ -1171,11 +1234,15 @@ body:has(.sidebar-overlay.active) .floating-icons {
 .featured-price,
 .category-products .product-price {
     margin: 0;
-    color: #e28f00;
-    font-size: 16px;
+    color: #ff9800 !important;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .featured-title {
         font-size: 18px;
     }
@@ -1185,14 +1252,17 @@ body:has(.sidebar-overlay.active) .floating-icons {
     }
 
     .featured-thumb .sale-badge {
-        width: 36px;
-        top: -10px;
-        right: 4px;
+        width: 32px;
+        top: 6px;
+        right: 6px;
     }
 
     .featured-thumb .sale-text {
-        font-size: 10px;
-        right: 12px;
+        top: 6px;
+        right: 6px;
+        width: 32px;
+        height: 32px;
+        font-size: 9px;
     }
 }
 
@@ -1676,7 +1746,8 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 /* ===== CATEGORY BLOCK ===== */
 .category-block {
-    margin: 40px 0;
+    margin-top: 5px;
+    margin-bottom: 40px;
 }
 
 .category-block-header {
@@ -1699,6 +1770,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
 }
 
 .category-block-header h3 {
+    text-transform: uppercase;
     margin: 0;
     font-size: 18px;
     color: #2e7d32;
@@ -1719,24 +1791,50 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 /* BODY */
 .category-block-body {
-    display: grid;
-    grid-template-columns: 330px 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
 }
 
-/* LEFT BANNER */
-.category-banner img {
-    width: 100%;
-    height: 100%;
-    border-radius: 20px;
-    object-fit: cover;
+/* DÒNG ĐẦU: Banner (2 cột) + 3 Card (3 cột) = 5 cột */
+.category-first-row {
+    display: grid;
+    grid-template-columns: 2fr 3fr; /* 2 cột banner, 3 cột card */
+    gap: 20px;
 }
 
-/* PRODUCT GRID */
-.category-products {
+/* BANNER - không CSS lên ảnh, chỉ layout */
+.category-banner {
+    width: 100%;
+}
+
+.category-banner img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    display: block;
+}
+
+/* 3 CARD ĐẦU CÙNG DÒNG VỚI BANNER */
+.category-products-first-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    gap: 20px;
+}
+
+.category-products-first-row .product-price {
+    color: #ff9800 !important;
+}
+
+/* CÁC DÒNG SAU: 5 cột, mỗi cột 1 card */
+.category-products-remaining {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
+
+.category-products-remaining .product-price {
+    color: #ff9800 !important;
 }
 
 /* PRODUCT ITEM */
@@ -1801,18 +1899,26 @@ body:has(.sidebar-overlay.active) .floating-icons {
 /* SALE BADGE (ẢNH PNG) */
 .sale-badge {
     position: absolute;
-    top: -10px;
-    right: 10px;
-    width: 48px;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: auto;
 }
 
 .sale-text {
     position: absolute;
-    top: 7px; /* đẩy xuống dưới một chút */
-    right: 18px;
+    /* Căn giữa text trong badge bg_sale */
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
+    z-index: 3;
 }
 
 /* TEXT */
@@ -1825,12 +1931,51 @@ body:has(.sidebar-overlay.active) .floating-icons {
 }
 
 .product-price {
-    font-size: 16px;
-    color: #e28f00;
+    font-size: 14px;
+    color: #ff9800 !important;
     font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
+/* ================= TABLET (768px - 991px) ================= */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .category-block {
+        margin-top: 5px;
+        margin-bottom: 35px;
+    }
+    
+    .category-block-header h3 {
+        font-size: 17px;
+    }
+    
+    .category-first-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .category-products-first-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .category-products-remaining {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    
+    .featured-card {
+        flex: 0 0 33.333%;
+    }
+    
+    .news-card {
+        min-width: calc((100% - 24px) / 2);
+    }
+}
+
 /* ================= MOBILE FIX ================= */
-@media (max-width: 576px) {
+@media (max-width: 767.98px) {
 
     /* 1. ẨN LINK RAU – CỦ – QUẢ – XEM TẤT CẢ */
     .category-block-header .right {
@@ -1839,22 +1984,54 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
     /* 2. BODY VỀ 1 CỘT */
     .category-block-body {
+        gap: 16px;
+    }
+
+    /* 3. DÒNG ĐẦU: Banner full width, 3 card bên dưới */
+    .category-first-row {
         grid-template-columns: 1fr;
         gap: 16px;
     }
 
-    /* 3. BANNER TRÁI FULL WIDTH */
+    /* 4. BANNER FULL WIDTH */
     .category-banner img {
         width: 100%;
         height: auto;
         border-radius: 16px;
     }
 
-    /* 4. GRID SẢN PHẨM = 2 CỘT */
-    .category-products {
+    /* 5. GRID SẢN PHẨM = 2 CỘT */
+    .category-products-first-row,
+    .category-products-remaining {
         grid-template-columns: repeat(2, 1fr);
         column-gap: 14px;
         row-gap: 22px;
+    }
+    
+    /* 6. Container padding */
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* 7. Featured section mobile */
+    .featured-container {
+        padding: 12px 15px;
+    }
+    
+    /* 8. Category header mobile */
+    .category-block-header {
+        padding: 12px 15px;
+    }
+    
+    /* 9. Product name và price mobile */
+    .product-name {
+        font-size: 14px;
+        min-height: 36px;
+    }
+    
+    .product-price {
+        font-size: 14px;
     }
 
     /* 5. THUMB NHỎ GỌN */
@@ -1864,9 +2041,17 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
     /* 6. SALE BADGE KHÔNG BỊ ĐÈ */
     .sale-badge {
-        width: 36px;
-        top: -10px;
-        right: 4px;
+        width: 32px;
+        top: 6px;
+        right: 6px;
+    }
+    
+    .sale-text {
+        top: 6px;
+        right: 6px;
+        width: 32px;
+        height: 32px;
+        font-size: 9px;
     }
 
     .sale-text {
@@ -1960,6 +2145,53 @@ body:has(.sidebar-overlay.active) .floating-icons {
 /* CARD */
 .news-card {
     min-width: calc((100% - 48px) / 3); /* 3 card desktop */
+    flex-shrink: 0;
+}
+
+/* Tablet - 2 card */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .news-card {
+        min-width: calc((100% - 24px) / 2); /* 2 card tablet */
+    }
+}
+
+/* Mobile - 1 card */
+@media (max-width: 767.98px) {
+    .news-block {
+        margin: 40px 0;
+    }
+    
+    .news-header {
+        padding: 12px 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .news-header h3 {
+        font-size: 16px;
+    }
+    
+    .news-header img {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .news-nav {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .news-card {
+        min-width: 100%; /* 1 card mobile */
+    }
+    
+    .news-thumb {
+        height: 180px;
+    }
+    
+    .news-track {
+        gap: 16px;
+    }
 }
 
 .news-thumb {
@@ -2486,18 +2718,25 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 .products-grid .sale-badge {
     position: absolute;
-    top: -10px;
-    right: 10px;
-    width: 48px;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: auto;
     z-index: 2;
 }
 
 .products-grid .sale-text {
     position: absolute;
-    top: 7px; /* đẩy xuống dưới một chút */
-    right: 18px;
+    /* Căn giữa text trong badge bg_sale */
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     z-index: 3;
 }
@@ -2511,7 +2750,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 .products-grid .product-price {
     font-size: 16px;
-    color: #e28f00;
+    color: #ff9800 !important;
     font-weight: 700;
     margin: 0;
 }
@@ -2714,14 +2953,17 @@ body:has(.sidebar-overlay.active) .floating-icons {
     }
 
     .products-grid .sale-badge {
-        width: 36px;
-        top: -10px;
-        right: 4px;
+        width: 32px;
+        top: 6px;
+        right: 6px;
     }
 
     .products-grid .sale-text {
-        font-size: 10px;
-        right: 12px;
+        top: 6px;
+        right: 6px;
+        width: 32px;
+        height: 32px;
+        font-size: 9px;
     }
 
     .products-grid .product-name {
@@ -3086,7 +3328,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
 }
 
 .product-price {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
     color: #3da04d;
     margin: 0;
@@ -5626,9 +5868,9 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 .related-thumb .sale-badge {
     position: absolute;
-    top: -10px;
-    right: 10px;
-    width: 48px;
+    top: 8px;
+    right: 8px;
+    width: 36px;
     height: auto;
     z-index: 10;
     pointer-events: none;
@@ -5636,10 +5878,16 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 .related-thumb .sale-text {
     position: absolute;
-    top: 17px; /* đẩy xuống dưới một chút */
-    right: 18px;
+    /* Căn giữa text trong badge bg_sale */
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     z-index: 11;
     line-height: 1;
@@ -5660,7 +5908,7 @@ body:has(.sidebar-overlay.active) .floating-icons {
 
 .related-price {
     margin: 0;
-    color: #e28f00;
+    color: #ff9800 !important;
     font-weight: 700;
     font-size: 14px;
 }
@@ -5692,13 +5940,16 @@ body:has(.sidebar-overlay.active) .floating-icons {
         flex: 0 0 calc(50% - 8px); /* 2 cards mobile */
     }
     .related-thumb .sale-badge {
-        width: 36px;
-        top: -10px;
-        right: 4px;
+        width: 32px;
+        top: 6px;
+        right: 6px;
     }
     .related-thumb .sale-text {
-        font-size: 10px;
-        right: 12px;
+        top: 6px;
+        right: 6px;
+        width: 32px;
+        height: 32px;
+        font-size: 9px;
     }
     .related-wrapper #relatedPrev {
         left: -6px;

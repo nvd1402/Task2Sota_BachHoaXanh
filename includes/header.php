@@ -36,6 +36,16 @@ if (file_exists('config/database.php')) {
 
 $pageTitle = $pageTitle ?? 'Bách Hóa Xanh';
 
+// Lấy danh mục cha từ database để hiển thị trong sidebar
+$parentCategories = [];
+if (file_exists('config/database.php') && file_exists('includes/functions.php')) {
+    require_once 'config/database.php';
+    require_once 'includes/functions.php';
+    $categoryConn = connectDB();
+    $parentCategories = getParentCategories($categoryConn);
+    closeDB($categoryConn);
+}
+
 // Xác định trang hiện tại - đơn giản và chính xác
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -179,32 +189,22 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
             <div class="category-toggle">
                 <i class="bi bi-list"></i> Danh mục sản phẩm
             </div>
-            <!-- Category dropdown (mock data) -->
+            <!-- Category dropdown (lấy từ database) -->
             <div class="category-dropdown">
-                <div class="category-item">
-                    <span>Rau – củ – quả</span>
-                </div>
-                <div class="category-item">
-                    <span>Thịt – cá – trứng</span>
-                </div>
-                <div class="category-item">
-                    <span>Mì – cháo – phở</span>
-                </div>
-                <div class="category-item">
-                    <span>Đồ uống các loại</span>
-                </div>
-                <div class="category-item">
-                    <span>Dầu ăn – Gia vị</span>
-                </div>
-                <div class="category-item">
-                    <span>Đồ đông lạnh</span>
-                </div>
-                <div class="category-item">
-                    <span>Thực phẩm chế biến</span>
-                </div>
-                <div class="category-item">
-                    <span>Thực phẩm Tết</span>
-                </div>
+                <?php if (!empty($parentCategories)): ?>
+                    <?php foreach ($parentCategories as $parentCat): ?>
+                        <div class="category-item">
+                            <a href="products.php?category=<?= (int)$parentCat['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
+                                <span><?= htmlspecialchars($parentCat['name']) ?></span>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Fallback nếu không có danh mục trong database -->
+                    <div class="category-item">
+                        <span>Chưa có danh mục</span>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
         

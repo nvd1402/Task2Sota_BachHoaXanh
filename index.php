@@ -46,14 +46,14 @@ if (empty($featuredProducts)) {
 }
 
 // Lấy danh mục cha có sản phẩm để hiển thị trên trang chủ
-// Mỗi danh mục sẽ lấy 6 sản phẩm đầu tiên (từ danh mục cha và tất cả danh mục con)
-$categoriesWithProducts = getParentCategoriesWithProducts($conn, null, 6);
+// Lấy nhiều sản phẩm để đủ cho layout: 3 card đầu + các dòng 5 card
+$categoriesWithProducts = getParentCategoriesWithProducts($conn, null, 20);
 
 include 'includes/header.php';
 ?>
 
 <!-- Banner Carousel -->
-<div class="hero-carousel my-4">
+<div class="hero-carousel" style="margin-bottom: 0;">
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-indicators">
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -168,18 +168,73 @@ include 'includes/header.php';
             <!-- CONTENT -->
             <div class="category-block-body">
 
-                <!-- BANNER TRÁI -->
-                <div class="category-banner">
-                    <?php if (!empty($cat['image'])): ?>
-                        <img src="assets/images/<?= htmlspecialchars($cat['image']) ?>" alt="Banner <?= htmlspecialchars($cat['name']) ?>">
-                    <?php else: ?>
-                        <img src="assets/images/banner_prduct3.png" alt="Banner">
-                    <?php endif; ?>
-                </div>
+                <?php 
+                // Kiểm tra nếu là danh mục "Thịt Cá Trứng" thì dùng banner_prduct2.png
+                $categoryName = mb_strtolower(trim($cat['name']), 'UTF-8');
+                // Kiểm tra nhiều cách viết: "thịt cá trứng", "thịt - cá - trứng", "thit ca trung", v.v.
+                $isMeatFishEgg = (
+                    (strpos($categoryName, 'thịt') !== false || strpos($categoryName, 'thit') !== false) &&
+                    (strpos($categoryName, 'cá') !== false || strpos($categoryName, 'ca') !== false) &&
+                    (strpos($categoryName, 'trứng') !== false || strpos($categoryName, 'trung') !== false)
+                ) || strpos($categoryName, 'thịt') !== false && (strpos($categoryName, 'cá') !== false || strpos($categoryName, 'trứng') !== false);
+                
+                // Xác định có banner hay không
+                $hasBanner = $isMeatFishEgg || !empty($cat['image']);
+                
+                // Chia sản phẩm: 3 sản phẩm đầu cùng dòng với banner, các sản phẩm còn lại 5 cột
+                $firstRowProducts = $hasBanner ? array_slice($cat['products'], 0, 3) : [];
+                $remainingProducts = $hasBanner ? array_slice($cat['products'], 3) : $cat['products'];
+                ?>
 
-                <!-- GRID SẢN PHẨM -->
-                <div class="category-products">
-                    <?php foreach ($cat['products'] as $p): ?>
+                <!-- DÒNG ĐẦU: Banner + 3 Card (5 cột: 2 cột banner + 3 cột card) -->
+                <?php if ($hasBanner): ?>
+                <div class="category-first-row">
+                    <!-- BANNER (2 cột) -->
+                    <div class="category-banner">
+                        <?php if ($isMeatFishEgg): ?>
+                            <img src="assets/images/banner_prduct2.png" alt="Banner Thịt Cá Trứng">
+                        <?php elseif (!empty($cat['image'])): ?>
+                            <img src="assets/images/<?= htmlspecialchars($cat['image']) ?>" alt="Banner <?= htmlspecialchars($cat['name']) ?>">
+                        <?php else: ?>
+                            <img src="assets/images/banner_prduct3.png" alt="Banner">
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- 3 CARD ĐẦU (3 cột) -->
+                    <div class="category-products-first-row">
+                        <?php foreach ($firstRowProducts as $p): ?>
+                            <?php
+                            $price     = (float)$p['price'];
+                            $salePrice = isset($p['sale_price']) ? (float)$p['sale_price'] : 0;
+                            $hasSale   = $salePrice > 0 && $salePrice < $price;
+                            $offPercent = $hasSale ? round(100 - ($salePrice / $price) * 100) : 0;
+                            $imgPath   = !empty($p['image']) ? 'assets/images/' . $p['image'] : 'assets/images/1.jpg';
+
+                            $displayMin = isset($p['price_min']) && $p['price_min'] > 0 ? (float)$p['price_min'] : $price;
+                            $displayMax = isset($p['price_max']) && $p['price_max'] > 0 ? (float)$p['price_max'] : ($hasSale ? $salePrice : $price);
+                            ?>
+                            <a href="product-detail.php?id=<?= (int)$p['id'] ?>" class="product-item">
+                                <div class="product-thumb">
+                                    <?php if ($hasSale): ?>
+                                    <img src="assets/images/bg_sale.png" class="sale-badge" alt="Sale">
+                                    <span class="sale-text">-<?= $offPercent ?>%</span>
+                                    <?php endif; ?>
+                                    <img src="<?= htmlspecialchars($imgPath) ?>" class="product-img" alt="<?= htmlspecialchars($p['name']) ?>">
+                                </div>
+                                <p class="product-name"><?= htmlspecialchars($p['name']) ?></p>
+                                <p class="product-price">
+                                    <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                                </p>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- CÁC DÒNG SAU: 5 cột, mỗi cột 1 card -->
+                <?php if (!empty($remainingProducts)): ?>
+                <div class="category-products-remaining">
+                    <?php foreach ($remainingProducts as $p): ?>
                         <?php
                         $price     = (float)$p['price'];
                         $salePrice = isset($p['sale_price']) ? (float)$p['sale_price'] : 0;
@@ -205,6 +260,7 @@ include 'includes/header.php';
                         </a>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
 
             </div>
         </div>

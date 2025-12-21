@@ -33,12 +33,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $slug = trim($_POST['slug'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'active';
+    $parent_id = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
 
     if ($name === '') {
         $errors[] = "Tên danh mục không được để trống";
     }
     if ($slug === '') {
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+    }
+
+    // Xử lý upload ảnh mới
+    $image = $category['image'] ?? ''; // Giữ ảnh cũ nếu không upload mới
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../assets/images/';
+        $fileName = time() . '_' . basename($_FILES['image']['name']);
+        $targetFile = $uploadDir . $fileName;
+        
+        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (in_array($imageFileType, $allowedTypes)) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                // Xóa ảnh cũ nếu có
+                if (!empty($category['image']) && file_exists($uploadDir . $category['image'])) {
+                    @unlink($uploadDir . $category['image']);
+                }
+                $image = $fileName;
+            } else {
+                $errors[] = "Lỗi khi upload ảnh";
+            }
+        } else {
+            $errors[] = "Chỉ chấp nhận file ảnh: JPG, JPEG, PNG, GIF, WEBP";
+        }
     }
 
     if (empty($errors)) {
@@ -52,8 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $check->close();
 
-        $upd = $conn->prepare("UPDATE categories SET name = ?, slug = ?, description = ?, status = ? WHERE id = ?");
-        $upd->bind_param("ssssi", $name, $slug, $description, $status, $id);
+        $upd = $conn->prepare("UPDATE categories SET name = ?, slug = ?, description = ?, status = ?, parent_id = ?, image = ? WHERE id = ?");
+        $upd->bind_param("ssssisi", $name, $slug, $description, $status, $parent_id, $image, $id);
         if ($upd->execute()) {
           $upd->close();
           closeDB($conn);
@@ -69,7 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'name' => $name,
         'slug' => $slug,
         'description' => $description,
-        'status' => $status
+        'status' => $status,
+        'parent_id' => $parent_id,
+        'image' => $image
     ]);
 }
 ?>
@@ -214,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </a>
             </div>
             <div class="card-body">
-              <form method="POST">
+              <form method="POST" enctype="multipart/form-data">
                 <div class="row">
                   <div class="col-md-8">
                     <div class="mb-3">
@@ -229,8 +257,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <label class="form-label">Mô tả</label>
                       <textarea name="description" class="form-control" rows="4"><?= htmlspecialchars($category['description']) ?></textarea>
                     </div>
+                    <div class="mb-3">
+                      <label class="form-label">Ảnh danh mục (Banner)</label>
+                      <?php if (!empty($category['image'])): ?>
+                        <div class="mb-2">
+                          <img src="../assets/images/<?= htmlspecialchars($category['image']) ?>" alt="Current image" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; padding: 5px;">
+                          <p class="text-muted small mt-1">Ảnh hiện tại</p>
+                        </div>
+                      <?php endif; ?>
+                      <input type="file" name="image" class="form-control" accept="image/*">
+                      <small class="text-muted">Để trống nếu không muốn thay đổi ảnh. Ảnh này sẽ hiển thị ở trang chủ cho danh mục cha (parent category)</small>
+                    </div>
                   </div>
                   <div class="col-md-4">
+                    <div class="mb-3">
+                      <label class="form-label">Danh mục cha</label>
+                      <select name="parent_id" class="form-control">
+                        <option value="">-- Không có (Danh mục cha) --</option>
+                        <?php
+                        $parentStmt = $conn->prepare("SELECT id, name FROM categories WHERE parent_id IS NULL AND id != ? ORDER BY name");
+                        $parentStmt->bind_param("i", $id);
+                        $parentStmt->execute();
+                        $parentResult = $parentStmt->get_result();
+                        while ($parent = $parentResult->fetch_assoc()):
+                        ?>
+                          <option value="<?= $parent['id'] ?>" <?= (($category['parent_id'] ?? null) == $parent['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($parent['name']) ?>
+                          </option>
+                        <?php
+                        endwhile;
+                        $parentStmt->close();
+                        ?>
+                      </select>
+                    </div>
                     <div class="mb-3">
                       <label class="form-label">Trạng thái</label>
                       <select name="status" class="form-control">
