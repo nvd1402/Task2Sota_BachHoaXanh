@@ -557,8 +557,64 @@ function getRecruitmentBySlug($conn, $slug) {
 function getCartItems($conn) {
     $cartItems = [];
     
-    // Kiểm tra session cart
-    if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    // Lấy user_id và session_id
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    $sessionId = session_id();
+    
+    // Lấy giỏ hàng từ database
+    // Sửa logic WHERE: nếu có user_id thì tìm theo user_id, nếu không thì tìm theo session_id
+    if ($userId) {
+        $sql = "SELECT c.*, p.name, p.image, p.price, p.sale_price, p.status 
+                FROM cart c 
+                INNER JOIN products p ON c.product_id = p.id 
+                WHERE p.status = 'active' AND c.user_id = ?
+                ORDER BY c.created_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $userId);
+    } else {
+        $sql = "SELECT c.*, p.name, p.image, p.price, p.sale_price, p.status 
+                FROM cart c 
+                INNER JOIN products p ON c.product_id = p.id 
+                WHERE p.status = 'active' AND c.session_id = ? AND c.user_id IS NULL
+                ORDER BY c.created_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $sessionId);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        // Tính giá (ưu tiên sale_price)
+        $price = (float)($row['sale_price'] > 0 ? $row['sale_price'] : $row['price']);
+        
+        $cartItems[] = [
+            'id' => $row['product_id'],
+            'product_id' => $row['product_id'],
+            'name' => $row['name'],
+            'img' => $row['image'],
+            'price' => $price,
+            'quantity' => (int)$row['quantity'],
+            'weight_option' => $row['weight_option']
+        ];
+        
+        // Đồng bộ với session để tương thích ngược
+        if (!isset($_SESSION['cart'])) {
+            $_SESSION['cart'] = [];
+        }
+        $cartKey = $row['product_id'] . '_' . ($row['weight_option'] ?? 'default');
+        $_SESSION['cart'][$cartKey] = [
+            'product_id' => $row['product_id'],
+            'quantity' => (int)$row['quantity'],
+            'weight_option' => $row['weight_option'],
+            'price' => $price,
+            'sale_price' => $row['sale_price']
+        ];
+    }
+    $stmt->close();
+    
+    // Fallback: Nếu database trống nhưng session có, lấy từ session
+    if (empty($cartItems) && isset($_SESSION['cart']) && is_array($_SESSION['cart']) && !empty($_SESSION['cart'])) {
         foreach ($_SESSION['cart'] as $item) {
             // Lấy thông tin sản phẩm từ database
             $productId = (int)$item['product_id'];
@@ -570,12 +626,14 @@ function getCartItems($conn) {
             
             if ($result && $result->num_rows > 0) {
                 $product = $result->fetch_assoc();
+                $price = (float)($item['sale_price'] ?? $product['sale_price'] ?? $product['price']);
+                
                 $cartItems[] = [
                     'id' => $product['id'],
                     'product_id' => $product['id'],
                     'name' => $product['name'],
                     'img' => $product['image'],
-                    'price' => (float)($item['sale_price'] ?? $product['sale_price'] ?? $product['price']),
+                    'price' => $price,
                     'quantity' => (int)($item['quantity'] ?? 1),
                     'weight_option' => $item['weight_option'] ?? null
                 ];

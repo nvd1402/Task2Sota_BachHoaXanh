@@ -1,10 +1,36 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Lấy số lượng giỏ hàng từ database
 $cartCount = 0;
-if (!empty($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $item) {
-        $cartCount += $item['quantity'];
+if (file_exists('config/database.php')) {
+    require_once 'config/database.php';
+    // Tạo connection riêng để không ảnh hưởng đến connection chính
+    $cartConn = connectDB();
+    
+    $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    $sessionId = session_id();
+    
+    if ($userId) {
+        $countSql = "SELECT COUNT(*) as total FROM cart WHERE user_id = ?";
+        $countStmt = $cartConn->prepare($countSql);
+        $countStmt->bind_param("i", $userId);
+    } else {
+        $countSql = "SELECT COUNT(*) as total FROM cart WHERE session_id = ? AND user_id IS NULL";
+        $countStmt = $cartConn->prepare($countSql);
+        $countStmt->bind_param("s", $sessionId);
+    }
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $cartCount = (int)($countResult->fetch_assoc()['total'] ?? 0);
+    $countStmt->close();
+    // Đóng connection riêng này
+    closeDB($cartConn);
+} else {
+    // Fallback: lấy từ session nếu không có database
+    if (!empty($_SESSION['cart'])) {
+        // Đếm số loại sản phẩm khác nhau (số phần tử trong mảng)
+        $cartCount = count($_SESSION['cart']);
     }
 }
 

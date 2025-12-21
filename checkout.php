@@ -1,4 +1,9 @@
 <?php
+// Bật output buffering để tránh lỗi header
+if (ob_get_level() == 0) {
+    ob_start();
+}
+
 session_start();
 require_once 'config/database.php';
 require_once 'includes/functions.php';
@@ -13,8 +18,14 @@ $cartItems = getCartItems($conn);
 $subtotal = calculateCartTotal($cartItems);
 $total = $subtotal;
 
+// Debug: Log cart items
+error_log('Checkout - Cart items count: ' . count($cartItems));
+error_log('Checkout - Session cart: ' . print_r($_SESSION['cart'] ?? [], true));
+error_log('Checkout - Cart items: ' . print_r($cartItems, true));
+
 // Nếu giỏ hàng trống, chuyển về trang giỏ hàng
 if (empty($cartItems)) {
+    error_log('Checkout - Cart is empty, redirecting to cart.php');
     header('Location: cart.php');
     exit();
 }
@@ -26,6 +37,20 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+    // Debug: Log POST data
+    error_log('Checkout POST - place_order received');
+    error_log('Checkout POST - Cart items before refresh: ' . count($cartItems));
+    error_log('Checkout POST - Session cart: ' . print_r($_SESSION['cart'] ?? [], true));
+    
+    // Lấy lại giỏ hàng để đảm bảo có dữ liệu mới nhất
+    $cartItems = getCartItems($conn);
+    if (empty($cartItems)) {
+        $error = 'Giỏ hàng của bạn đã trống. Vui lòng thêm sản phẩm vào giỏ hàng trước khi đặt hàng.';
+        error_log('Checkout POST - Cart is empty after POST');
+    } else {
+        error_log('Checkout POST - Cart items after refresh: ' . count($cartItems));
+    }
+    
     // Lấy thông tin từ form và làm sạch dữ liệu
     $firstName = trim($_POST['first_name'] ?? '');
     $lastName = trim($_POST['last_name'] ?? '');
@@ -77,12 +102,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         $errors[] = 'Email không hợp lệ';
     }
     
+    // Kiểm tra giỏ hàng trước khi xử lý
+    if (empty($cartItems)) {
+        $errors[] = 'Giỏ hàng của bạn đã trống. Vui lòng thêm sản phẩm vào giỏ hàng trước khi đặt hàng.';
+        error_log('Checkout POST - Cart is empty!');
+        error_log('Checkout POST - Session cart: ' . print_r($_SESSION['cart'] ?? [], true));
+    }
+    
     if (empty($errors)) {
+        error_log('Checkout POST - No validation errors, proceeding with order creation');
         // Tạo mã đơn hàng
         $orderNumber = 'ORD' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
         // Tính tổng tiền
         $subtotal = calculateCartTotal($cartItems);
+        if ($subtotal <= 0) {
+            $errors[] = 'Tổng tiền đơn hàng không hợp lệ.';
+        }
+        
         $shippingFee = 30000; // Phí vận chuyển mặc định
         $discount = 0;
         $total = $subtotal + $shippingFee - $discount;
@@ -90,9 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         // Lấy user_id nếu đã đăng nhập
         $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
         
-        // Lấy phương thức thanh toán
-        $paymentMethod = trim($_POST['payment_method'] ?? 'cod');
-        $paymentStatus = ($paymentMethod === 'bank_transfer' || $paymentMethod === 'e_wallet') ? 'pending' : 'pending';
+        // Phương thức thanh toán: chỉ COD
+        $paymentMethod = 'cod';
+        $paymentStatus = 'pending';
         
         // Tạo đơn hàng
         $customerName = $firstName . ' ' . $lastName;
@@ -124,9 +161,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         
         if ($stmt->execute()) {
             $orderId = $stmt->insert_id;
+            error_log('Checkout - Order created with ID: ' . $orderId . ', Order number: ' . $orderNumber);
+            error_log('Checkout - Processing ' . count($cartItems) . ' cart items');
             
             // Thêm chi tiết đơn hàng
+            $itemCount = 0;
             foreach ($cartItems as $item) {
+                $itemCount++;
                 // Lấy thông tin sản phẩm
                 $productSql = "SELECT * FROM products WHERE id = ?";
                 $productStmt = $conn->prepare($productSql);
@@ -156,27 +197,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                         $orderId, $item['product_id'], $productName, $productImage, $productSku,
                         $quantity, $weightOption, $unitPrice, $itemSubtotal
                     );
-                    $itemStmt->execute();
+                    if (!$itemStmt->execute()) {
+                        error_log('Checkout - Error inserting order item: ' . $itemStmt->error);
+                        throw new Exception('Có lỗi xảy ra khi thêm sản phẩm vào đơn hàng');
+                    }
                     $itemStmt->close();
+                    error_log('Checkout - Order item added: ' . $productName . ' x' . $quantity);
+                } else {
+                    error_log('Checkout - Product not found for ID: ' . $item['product_id']);
                 }
             }
             
-            // Xóa giỏ hàng
+            error_log('Checkout - Total items processed: ' . $itemCount);
+            
+            // Xóa giỏ hàng từ database và session
+            $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            $sessionId = session_id();
+            
+            // Xóa từ database
+            if ($userId) {
+                $deleteSql = "DELETE FROM cart WHERE user_id = ?";
+                $deleteStmt = $conn->prepare($deleteSql);
+                $deleteStmt->bind_param("i", $userId);
+            } else {
+                $deleteSql = "DELETE FROM cart WHERE session_id = ? AND user_id IS NULL";
+                $deleteStmt = $conn->prepare($deleteSql);
+                $deleteStmt->bind_param("s", $sessionId);
+            }
+            $deleteStmt->execute();
+            $deleteStmt->close();
+            
+            // Xóa từ session
             $_SESSION['cart'] = [];
+            
+            error_log('Checkout - Cart cleared from database and session');
             
             $orderPlaced = true;
             $stmt->close();
             
+            error_log('Checkout - Order created successfully. Order ID: ' . $orderId . ', Order Number: ' . $orderNumber);
+            
+            // Đảm bảo không có output trước header
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            
             // Chuyển đến trang hoàn tất đơn hàng
-            header('Location: order-complete.php?order=' . urlencode($orderNumber));
+            $redirectUrl = 'order-complete.php?order=' . urlencode($orderNumber);
+            error_log('Checkout - Redirecting to: ' . $redirectUrl);
+            header('Location: ' . $redirectUrl);
             exit();
         } else {
-            $error = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
+            $errorMsg = 'Có lỗi xảy ra khi tạo đơn hàng: ' . $stmt->error;
+            error_log('Checkout - Database error: ' . $errorMsg);
+            error_log('Checkout - SQL error code: ' . $stmt->errno);
+            $error = $errorMsg;
             $stmt->close();
         }
     } else {
         // Hiển thị tất cả lỗi validation
         $error = implode('<br>', $errors);
+        // Debug: log errors
+        error_log('Checkout validation errors: ' . $error);
+        error_log('Checkout POST data: ' . print_r($_POST, true));
+        error_log('Checkout cart items count: ' . count($cartItems));
+        error_log('Checkout session cart: ' . print_r($_SESSION['cart'] ?? [], true));
+    }
+} else {
+    // Debug: Kiểm tra xem có POST request không
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        error_log('POST request received but place_order not set.');
+        error_log('POST keys: ' . implode(', ', array_keys($_POST)));
+        error_log('POST data: ' . print_r($_POST, true));
+        $error = 'Lỗi: Không nhận được yêu cầu đặt hàng. Vui lòng thử lại.';
     }
 }
 
@@ -204,6 +297,12 @@ include 'includes/header.php';
         <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; color: #c33; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
             <strong>Lỗi:</strong> <?= htmlspecialchars($error) ?>
         </div>
+        <script>
+            console.error('Checkout Error:', <?= json_encode($error) ?>);
+            console.error('POST Data:', <?= json_encode($_POST ?? []) ?>);
+            console.error('Cart Items Count:', <?= count($cartItems ?? []) ?>);
+            alert('Lỗi: <?= addslashes($error) ?>');
+        </script>
         <?php endif; ?>
         
         <?php if (!empty($success)): ?>
@@ -375,30 +474,19 @@ include 'includes/header.php';
                         <h4 class="payment-title">Phương thức thanh toán</h4>
                         <div class="payment-options">
                             <div class="payment-option">
-                                <input type="radio" id="payment-cod" name="payment_method" value="cod" checked>
-                                <label for="payment-cod">
-                                    <strong>Trả tiền mặt khi nhận hàng (COD)</strong>
-                                    <span class="payment-desc">Thanh toán khi nhận được hàng</span>
-                                </label>
-                            </div>
-                            <div class="payment-option">
-                                <input type="radio" id="payment-bank" name="payment_method" value="bank_transfer">
-                                <label for="payment-bank">
-                                    <strong>Chuyển khoản ngân hàng</strong>
-                                    <span class="payment-desc">Chuyển khoản qua tài khoản ngân hàng</span>
-                                </label>
-                            </div>
-                            <div class="payment-option">
-                                <input type="radio" id="payment-wallet" name="payment_method" value="e_wallet">
-                                <label for="payment-wallet">
-                                    <strong>Ví điện tử</strong>
-                                    <span class="payment-desc">Thanh toán qua ví điện tử (MoMo, ZaloPay...)</span>
+                                <input type="hidden" name="payment_method" value="cod">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: default;">
+                                    <i class="bi bi-cash-coin" style="font-size: 24px; color: #3da04d;"></i>
+                                    <div>
+                                        <strong>Trả tiền mặt khi nhận hàng (COD)</strong>
+                                        <span class="payment-desc" style="display: block; color: #666; font-size: 14px; margin-top: 5px;">Thanh toán khi nhận được hàng</span>
+                                    </div>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" name="place_order" class="btn-place-order" id="place-order-btn" disabled>PLACE ORDER</button>
+                    <button type="submit" name="place_order" value="1" class="btn-place-order" id="place-order-btn">PLACE ORDER</button>
 
                     <p class="privacy-notice">
                         Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.
@@ -411,148 +499,5 @@ include 'includes/header.php';
 
 <?php include 'includes/footer.php'; ?>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle coupon form
-    const toggleCoupon = document.getElementById('toggle-coupon');
-    const couponFormBox = document.getElementById('coupon-form-box');
-    
-    if (toggleCoupon && couponFormBox) {
-        toggleCoupon.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (couponFormBox.style.display === 'none') {
-                couponFormBox.style.display = 'block';
-            } else {
-                couponFormBox.style.display = 'none';
-            }
-        });
-    }
-
-    // Form validation and submit
-    const billingForm = document.querySelector('.billing-form');
-    const placeOrderBtn = document.getElementById('place-order-btn');
-    const requiredFields = billingForm.querySelectorAll('[required]');
-
-    function validateForm() {
-        let allFilled = true;
-        let isValid = true;
-        
-        requiredFields.forEach(function(field) {
-            const value = field.value.trim();
-            
-            // Kiểm tra trường bắt buộc
-            if (!value) {
-                allFilled = false;
-                field.style.borderColor = '#d0021b';
-            } else {
-                // Validate email
-                if (field.type === 'email' && value) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(value)) {
-                        isValid = false;
-                        field.style.borderColor = '#d0021b';
-                    } else {
-                        field.style.borderColor = '#ddd';
-                    }
-                }
-                // Validate phone
-                else if (field.type === 'tel' && value) {
-                    const phoneRegex = /^[\d\s\+\-\(\)]{10,15}$/;
-                    if (!phoneRegex.test(value)) {
-                        isValid = false;
-                        field.style.borderColor = '#d0021b';
-                    } else {
-                        field.style.borderColor = '#ddd';
-                    }
-                }
-                // Các trường khác
-                else {
-                    field.style.borderColor = '#ddd';
-                }
-            }
-        });
-        
-        if (allFilled && isValid) {
-            placeOrderBtn.disabled = false;
-            placeOrderBtn.style.opacity = '1';
-            placeOrderBtn.style.cursor = 'pointer';
-        } else {
-            placeOrderBtn.disabled = true;
-            placeOrderBtn.style.opacity = '0.6';
-            placeOrderBtn.style.cursor = 'not-allowed';
-        }
-    }
-
-    // Check on input change
-    requiredFields.forEach(function(field) {
-        field.addEventListener('input', validateForm);
-        field.addEventListener('change', validateForm);
-    });
-
-    // Initial check
-    validateForm();
-
-    // Handle form submit
-    if (billingForm) {
-        billingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Check if all required fields are filled
-            let allFilled = true;
-            requiredFields.forEach(function(field) {
-                if (!field.value.trim()) {
-                    allFilled = false;
-                    field.style.borderColor = '#d0021b';
-                } else {
-                    field.style.borderColor = '#ddd';
-                }
-            });
-
-            // Validate email format
-            const emailField = billingForm.querySelector('[type="email"]');
-            let emailValid = true;
-            if (emailField && emailField.value.trim()) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailField.value.trim())) {
-                    emailValid = false;
-                    emailField.style.borderColor = '#d0021b';
-                }
-            }
-            
-            // Validate phone format
-            const phoneField = billingForm.querySelector('[type="tel"]');
-            let phoneValid = true;
-            if (phoneField && phoneField.value.trim()) {
-                const phoneRegex = /^[\d\s\+\-\(\)]{10,15}$/;
-                if (!phoneRegex.test(phoneField.value.trim())) {
-                    phoneValid = false;
-                    phoneField.style.borderColor = '#d0021b';
-                }
-            }
-
-            if (allFilled && emailValid && phoneValid) {
-                // Submit form
-                billingForm.submit();
-            } else {
-                let errorMsg = 'Vui lòng điền đầy đủ các trường bắt buộc.';
-                if (!emailValid) {
-                    errorMsg += '\n- Email không hợp lệ.';
-                }
-                if (!phoneValid) {
-                    errorMsg += '\n- Số điện thoại không hợp lệ (10-15 số).';
-                }
-                alert(errorMsg);
-            }
-        });
-    }
-
-    // Handle place order button click
-    if (placeOrderBtn) {
-        placeOrderBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            billingForm.dispatchEvent(new Event('submit'));
-        });
-    }
-});
-</script>
+<script src="assets/js/checkout.js"></script>
 

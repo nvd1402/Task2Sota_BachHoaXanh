@@ -88,7 +88,7 @@ include 'includes/header.php';
         <div class="row g-4">
 
             <!-- LEFT COLUMN - PRODUCT IMAGE GALLERY -->
-            <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-4 product-image-col">
                 <div class="product-image-section">
                     <?php
                     $mainImage = !empty($product['image']) ? 'assets/images/' . $product['image'] : 'assets/images/1.jpg';
@@ -114,25 +114,37 @@ include 'includes/header.php';
                         </button>
                     </div>
                     
-                    <!-- Thumbnail Images -->
+                    <!-- Thumbnail Images Carousel -->
                     <?php if (!empty($gallery)): ?>
-                    <div class="thumbnail-images d-flex gap-2 flex-wrap justify-content-center">
-                        <?php foreach ($gallery as $index => $img): ?>
-                            <?php
-                            $imgPath = 'assets/images/' . $img;
-                            $isActive = ($index === 0) ? 'active border border-success border-2' : 'border border-secondary';
-                            ?>
-                            <div class="thumbnail-item <?= $isActive ?>" onclick="changeMainImage('<?= htmlspecialchars($imgPath) ?>', this, <?= $index ?>)" style="width: 80px; height: 80px; cursor: pointer; border-radius: 8px; overflow: hidden;">
-                                <img src="<?= htmlspecialchars($imgPath) ?>" alt="Thumbnail <?= $index + 1 ?>" class="w-100 h-100" style="object-fit: contain;">
+                    <div class="thumbnail-carousel-wrapper <?= count($gallery) > 4 ? 'has-nav-buttons' : '' ?>">
+                        <?php if (count($gallery) > 4): ?>
+                        <button class="thumbnail-nav-btn thumbnail-prev" type="button" onclick="scrollThumbnails(-1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <?php endif; ?>
+                        <div class="thumbnail-images <?= count($gallery) > 4 ? 'has-more' : '' ?>" style="width: <?= count($gallery) > 4 ? '264px' : (count($gallery) * 66) . 'px' ?>;">
+                            <?php foreach ($gallery as $index => $img): ?>
+                                <?php
+                                $imgPath = 'assets/images/' . $img;
+                                $isActive = ($index === 0) ? 'active' : '';
+                                ?>
+                                <div class="thumbnail-item <?= $isActive ?>" onclick="changeMainImage('<?= htmlspecialchars($imgPath) ?>', this, <?= $index ?>)">
+                                    <img src="<?= htmlspecialchars($imgPath) ?>" alt="Thumbnail <?= $index + 1 ?>">
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endforeach; ?>
-                        </div>
+                        <?php if (count($gallery) > 4): ?>
+                        <button class="thumbnail-nav-btn thumbnail-next" type="button" onclick="scrollThumbnails(1)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <?php endif; ?>
                     </div>
                 </div>
 
             <!-- CENTER COLUMN - PRODUCT INFO -->
-            <div class="col-12 col-lg-4">
+            <div class="col-12 col-lg-5 product-info-col">
                 <div class="product-info-section">
                     <?php
                     $displayMin = isset($product['price_min']) && $product['price_min'] > 0 ? (float)$product['price_min'] : $price;
@@ -143,8 +155,11 @@ include 'includes/header.php';
                     ?>
 
                     <h1 class="product-title fw-bold mb-3"><?= htmlspecialchars($product['name']) ?></h1>
-                    <div class="product-price text-success fw-bold fs-4 mb-3">
-                        <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                    <!-- Price Range Display (always shown at top) -->
+                    <div class="product-price-range mb-3">
+                        <div class="product-price text-success fw-bold fs-4">
+                            <?= number_format($displayMin, 0, ',', '.') ?>₫ – <?= number_format($displayMax, 0, ',', '.') ?>₫
+                        </div>
                     </div>
                     
                     <!-- Features -->
@@ -155,26 +170,37 @@ include 'includes/header.php';
 
                     <!-- Promotion Box -->
                     <?php if (!empty($product['promo_heading']) || !empty($product['promo_content'])): ?>
-                    <div class="promotion-box border border-danger border-2 border-dashed rounded p-3 mb-4" style="background: #fff;">
+                    <div class="promotion-box mb-4">
                         <?php if (!empty($product['promo_heading'])): ?>
-                            <div class="promotion-title fw-bold text-danger mb-2 d-flex align-items-center gap-2">
-                                <i class="bi bi-gift-fill"></i>
-                                <?= htmlspecialchars($product['promo_heading']) ?>
+                            <div class="promotion-header">
+                                <div class="promotion-title d-flex align-items-center gap-2">
+                                    <i class="bi bi-gift-fill"></i>
+                                    <span><?= htmlspecialchars($product['promo_heading']) ?></span>
+                                </div>
                             </div>
                         <?php endif; ?>
                         <?php if (!empty($product['promo_content'])): ?>
-                        <div class="promotion-items">
+                        <div class="promotion-content">
+                            <div class="promotion-items">
                                 <?php
                                 $promoLines = explode('\n', $product['promo_content']);
                                 foreach ($promoLines as $index => $line):
                                     $line = trim($line);
                                     if (!empty($line)):
+                                        // Check if line contains link pattern
+                                        $hasLink = preg_match('/\(click xem chi tiết\)/i', $line);
+                                        if ($hasLink) {
+                                            $line = preg_replace('/\(click xem chi tiết\)/i', '<a href="#" class="promotion-link">(click xem chi tiết)</a>', $line);
+                                        }
                                 ?>
-                                    <div class="promotion-item mb-1"><?= htmlspecialchars($line) ?></div>
+                                    <div class="promotion-item">
+                                        <span class="promotion-text"><?= $line ?></span>
+                                    </div>
                                 <?php
                                     endif;
                                 endforeach;
                                 ?>
+                            </div>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -186,29 +212,78 @@ include 'includes/header.php';
                         <label class="size-label fw-semibold d-block mb-2">Trọng lượng :</label>
                         <div class="size-buttons d-flex gap-2 flex-wrap">
                             <?php foreach ($weightOptions as $index => $option): ?>
-                                <?php $option = trim($option); ?>
-                                <button class="size-btn btn <?= $index === 0 ? 'btn-success' : 'btn-outline-secondary' ?>" data-size="<?= htmlspecialchars($option) ?>" type="button"><?= htmlspecialchars($option) ?></button>
+                                <?php 
+                                $option = trim($option);
+                                // Extract weight number (e.g., "1KG" -> 1)
+                                $weightNum = (float) preg_replace('/[^0-9.]/', '', $option);
+                                
+                                // Calculate price based on weight
+                                // Get max weight from options
+                                $maxWeight = max(array_map(function($w) {
+                                    return (float) preg_replace('/[^0-9.]/', '', trim($w));
+                                }, $weightOptions));
+                                
+                                // Calculate price: linear interpolation between min and max
+                                // If only one weight, use displayMin
+                                if (count($weightOptions) == 1) {
+                                    $weightPrice = $displayMin;
+                                    $weightSalePrice = $hasSale ? $salePrice : 0;
+                                } else {
+                                    // Calculate price based on weight ratio
+                                    $weightRatio = $maxWeight > 0 ? $weightNum / $maxWeight : 1;
+                                    $weightPrice = $displayMin + ($displayMax - $displayMin) * $weightRatio;
+                                    
+                                    // Calculate sale price if exists
+                                    if ($hasSale && $salePrice > 0) {
+                                        $salePricePerKg = $salePrice / $maxWeight;
+                                        $weightSalePrice = $salePricePerKg * $weightNum;
+                                    } else {
+                                        $weightSalePrice = 0;
+                                    }
+                                }
+                                
+                                // Round to nearest 1000
+                                $weightPrice = round($weightPrice / 1000) * 1000;
+                                $weightSalePrice = $weightSalePrice > 0 ? round($weightSalePrice / 1000) * 1000 : 0;
+                                
+                                // Map weight với image trong gallery (mỗi weight tương ứng với một ảnh)
+                                $imageIndex = min($index, count($gallery) - 1);
+                                $weightImagePath = !empty($gallery[$imageIndex]) ? 'assets/images/' . $gallery[$imageIndex] : (!empty($product['image']) ? 'assets/images/' . $product['image'] : 'assets/images/1.jpg');
+                                ?>
+                                <button class="size-btn btn <?= $index === 0 ? 'btn-success' : 'btn-outline-secondary' ?>" 
+                                        data-size="<?= htmlspecialchars($option) ?>" 
+                                        data-weight="<?= $weightNum ?>"
+                                        data-price="<?= $weightPrice ?>"
+                                        data-sale-price="<?= $weightSalePrice ?>"
+                                        data-image-index="<?= $imageIndex ?>"
+                                        data-image-path="<?= htmlspecialchars($weightImagePath) ?>"
+                                        type="button"><?= htmlspecialchars($option) ?></button>
                             <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed Price Display (shown below weight selection when weight is selected) -->
+                    <div class="product-price-detail mb-4" id="productPriceDetailWrapper" style="display: none;">
+                        <div class="product-price-detail-content" id="productPriceDetailDisplay">
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                     <?php endif; ?>
 
-                    <!-- Quantity Selection -->
-                    <div class="quantity-selection d-flex align-items-center gap-3 mb-4">
-                        <label class="quantity-label fw-semibold mb-0">Số lượng :</label>
+                    <!-- Quantity and Action Buttons Row -->
+                    <div class="quantity-action-row d-flex align-items-center gap-3 mb-4">
+                        <!-- Quantity Selection -->
                         <div class="quantity-controls d-flex align-items-center border rounded">
                             <button class="qty-btn minus btn btn-light border-0 rounded-0" type="button" style="width: 40px; height: 40px;">-</button>
                             <input type="number" class="qty-input form-control border-0 text-center" value="1" min="1" id="productQuantity" style="width: 60px; height: 40px;">
                             <button class="qty-btn plus btn btn-light border-0 rounded-0" type="button" style="width: 40px; height: 40px;">+</button>
                         </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons d-flex gap-2">
-                        <button class="btn-add-cart btn btn-success flex-fill d-flex align-items-center justify-content-center gap-2" type="button" id="addToCartBtn">
+                        
+                        <!-- Action Buttons -->
+                        <button class="btn-add-cart btn btn-success flex-fill d-flex align-items-center justify-content-center gap-2" type="button" id="addToCartBtn" style="height: 40px;">
                             <i class="bi bi-cart-plus"></i> Add to cart
                         </button>
-                        <button class="btn-buy-now btn text-white flex-fill" type="button" id="buyNowBtn" style="background: #e91e63;">BUY NOW</button>
+                        <button class="btn-buy-now btn text-white flex-fill" type="button" id="buyNowBtn" style="background: #e91e63; height: 40px;">BUY NOW</button>
                     </div>
                     </div>
             </div>
@@ -216,7 +291,7 @@ include 'includes/header.php';
             <!-- RIGHT COLUMN - FEATURED PRODUCTS -->
             <div class="col-12 col-lg-3">
             <aside class="product-detail-sidebar">
-                    <div class="sidebar-featured border">
+                    <div class="sidebar-featured">
                         <h3 class="sidebar-featured-title text-white text-center py-2 mb-0 fw-bold" style="background: #3da04d;">SẢN PHẨM NỔI BẬT</h3>
                         <div class="sidebar-products p-3">
                             <?php if (!empty($featuredProducts)): ?>
@@ -233,7 +308,7 @@ include 'includes/header.php';
                                     $itemImgPath = !empty($item['image']) ? 'assets/images/' . $item['image'] : 'assets/images/1.jpg';
                                     $isLast = ($index === $totalItems - 1);
                                     ?>
-                                    <a href="product-detail.php?id=<?= (int)$item['id'] ?>" class="sidebar-product-item d-flex gap-3 text-decoration-none text-dark mb-3 pb-3 <?= !$isLast ? 'border-bottom border-success border-1 border-dashed' : '' ?>">
+                                    <a href="product-detail.php?id=<?= (int)$item['id'] ?>" class="sidebar-product-item d-flex gap-3 text-decoration-none text-dark">
                                     <div class="sidebar-product-img" style="width: 80px; height: 80px; flex-shrink: 0;">
                                             <img src="<?= htmlspecialchars($itemImgPath) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-100 h-100" style="object-fit: contain; border-radius: 6px;">
                                 </div>
@@ -464,6 +539,8 @@ function changeMainImage(src, element, index) {
     });
     if (element) {
         element.classList.add('active');
+        // Scroll thumbnail into view
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 }
 
@@ -480,8 +557,40 @@ function navigateGallery(direction) {
     const thumbnails = document.querySelectorAll('.thumbnail-item');
     thumbnails.forEach((item, idx) => {
         item.classList.toggle('active', idx === currentGalleryIndex);
+        if (idx === currentGalleryIndex) {
+            // Scroll active thumbnail into view
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     });
 }
+
+// Scroll thumbnails carousel
+function scrollThumbnails(direction) {
+    const thumbnailContainer = document.querySelector('.thumbnail-images');
+    if (!thumbnailContainer) return;
+    
+    const scrollAmount = 66; // Width of thumbnail (60px) + gap (6px)
+    const currentScroll = thumbnailContainer.scrollLeft;
+    const newScroll = currentScroll + (scrollAmount * direction);
+    
+    thumbnailContainer.scrollTo({
+        left: newScroll,
+        behavior: 'smooth'
+    });
+}
+
+// Initialize thumbnail carousel
+document.addEventListener('DOMContentLoaded', function() {
+    const thumbnailContainer = document.querySelector('.thumbnail-images');
+    if (thumbnailContainer) {
+        const thumbnails = thumbnailContainer.querySelectorAll('.thumbnail-item');
+        // If more than 4 thumbnails, ensure has-more class is applied
+        if (thumbnails.length > 4 && !thumbnailContainer.classList.contains('has-more')) {
+            thumbnailContainer.classList.add('has-more');
+            thumbnailContainer.style.maxWidth = '100%';
+        }
+    }
+});
 
 // Quantity controls
 document.querySelector('.qty-btn.minus').addEventListener('click', function() {
@@ -496,12 +605,108 @@ document.querySelector('.qty-btn.plus').addEventListener('click', function() {
     input.value = parseInt(input.value) + 1;
 });
 
-// Size selection
+// Format number to Vietnamese currency format
+function formatPrice(price) {
+    return parseFloat(price).toLocaleString('vi-VN');
+}
+
+// Size selection - Change image and price when weight is selected
 document.querySelectorAll('.size-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+        // Update button states
+        document.querySelectorAll('.size-btn').forEach(b => {
+            b.classList.remove('active', 'btn-success');
+            b.classList.add('btn-outline-secondary');
+        });
+        this.classList.add('active', 'btn-success');
+        this.classList.remove('btn-outline-secondary');
+        
+        // Get weight data
+        const weight = this.getAttribute('data-weight');
+        const price = parseFloat(this.getAttribute('data-price')) || 0;
+        const salePrice = parseFloat(this.getAttribute('data-sale-price')) || 0;
+        const hasSale = salePrice > 0 && salePrice < price;
+        
+        // Update detailed price display (below weight selection)
+        const priceDetailWrapper = document.getElementById('productPriceDetailWrapper');
+        const priceDetailDisplay = document.getElementById('productPriceDetailDisplay');
+        
+        if (priceDetailDisplay && priceDetailWrapper) {
+            if (hasSale && salePrice > 0) {
+                // Show original price with strikethrough and sale price
+                priceDetailDisplay.innerHTML = '<span class="text-decoration-line-through text-muted me-2" style="color: #999; font-size: 16px;">' + formatPrice(price) + '₫</span><span class="text-success fw-bold" style="font-size: 20px;">' + formatPrice(salePrice) + '₫</span>';
+            } else {
+                // Show single price
+                priceDetailDisplay.innerHTML = '<span class="text-success fw-bold" style="font-size: 20px;">' + formatPrice(price) + '₫</span>';
+            }
+            // Show price detail wrapper
+            priceDetailWrapper.style.display = 'block';
+        }
+        
+        // Change main product image based on selected weight
+        const imagePath = this.getAttribute('data-image-path');
+        const imageIndex = parseInt(this.getAttribute('data-image-index')) || 0;
+        
+        if (imagePath) {
+            const mainImg = document.getElementById('mainProductImg');
+            if (mainImg) {
+                mainImg.src = imagePath;
+                currentGalleryIndex = imageIndex;
+                
+                // Update active thumbnail
+                const thumbnails = document.querySelectorAll('.thumbnail-item');
+                thumbnails.forEach((item, idx) => {
+                    item.classList.toggle('active', idx === imageIndex);
+                });
+                
+                // Scroll to active thumbnail
+                if (thumbnails[imageIndex]) {
+                    thumbnails[imageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            }
+        }
     });
+});
+
+// Set initial detailed price for first weight option on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const firstWeightBtn = document.querySelector('.size-btn.btn-success');
+    if (firstWeightBtn) {
+        // Get weight data for first button
+        const price = parseFloat(firstWeightBtn.getAttribute('data-price')) || 0;
+        const salePrice = parseFloat(firstWeightBtn.getAttribute('data-sale-price')) || 0;
+        const hasSale = salePrice > 0 && salePrice < price;
+        
+        // Update detailed price display
+        const priceDetailWrapper = document.getElementById('productPriceDetailWrapper');
+        const priceDetailDisplay = document.getElementById('productPriceDetailDisplay');
+        
+        if (priceDetailDisplay && priceDetailWrapper) {
+            if (hasSale && salePrice > 0) {
+                priceDetailDisplay.innerHTML = '<span class="text-decoration-line-through text-muted me-2" style="color: #999; font-size: 16px;">' + formatPrice(price) + '₫</span><span class="text-success fw-bold" style="font-size: 20px;">' + formatPrice(salePrice) + '₫</span>';
+            } else {
+                priceDetailDisplay.innerHTML = '<span class="text-success fw-bold" style="font-size: 20px;">' + formatPrice(price) + '₫</span>';
+            }
+            priceDetailWrapper.style.display = 'block';
+        }
+        
+        // Set initial image
+        const imagePath = firstWeightBtn.getAttribute('data-image-path');
+        const imageIndex = parseInt(firstWeightBtn.getAttribute('data-image-index')) || 0;
+        if (imagePath) {
+            const mainImg = document.getElementById('mainProductImg');
+            if (mainImg) {
+                mainImg.src = imagePath;
+                currentGalleryIndex = imageIndex;
+                
+                // Update active thumbnail
+                const thumbnails = document.querySelectorAll('.thumbnail-item');
+                thumbnails.forEach((item, idx) => {
+                    item.classList.toggle('active', idx === imageIndex);
+                });
+            }
+        }
+    }
 });
 
 // Tabs
@@ -1004,18 +1209,27 @@ function addToCart(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Cập nhật số lượng giỏ hàng
+            console.log('Add to cart success:', data);
+            console.log('Cart count from response:', data.cart_count);
+            
+            // Cập nhật số lượng giỏ hàng realtime
             updateCartCount();
             
+            // Cập nhật từ response nếu có
+            if (data.cart_count !== undefined) {
+                updateCartCountDisplay(data.cart_count);
+            }
+            
             // Hiển thị thông báo
-            alert(data.message);
+            alert(data.message || 'Đã thêm sản phẩm vào giỏ hàng');
             
             if (addToCartBtn) {
                 addToCartBtn.disabled = false;
                 addToCartBtn.innerHTML = '<i class="bi bi-cart-plus"></i> Add to cart';
             }
         } else {
-            alert('Lỗi: ' + data.message);
+            console.error('Add to cart error:', data);
+            alert('Lỗi: ' + (data.message || 'Không thể thêm sản phẩm vào giỏ hàng'));
             if (addToCartBtn) {
                 addToCartBtn.disabled = false;
                 addToCartBtn.innerHTML = '<i class="bi bi-cart-plus"></i> Add to cart';
@@ -1060,20 +1274,38 @@ function buyNow(productId) {
     });
 }
 
-// Cập nhật số lượng giỏ hàng
+// Cập nhật số lượng giỏ hàng từ database
 function updateCartCount() {
     fetch('ajax/cart.php?action=get_count')
         .then(response => response.json())
         .then(data => {
+            console.log('Cart count response:', data);
             if (data.success) {
-                const cartCountEl = document.querySelector('.cart-count');
-                if (cartCountEl) {
-                    cartCountEl.textContent = data.cart_count;
-                    cartCountEl.style.display = data.cart_count > 0 ? 'inline' : 'none';
-                }
+                updateCartCountDisplay(data.cart_count || 0);
+            } else {
+                console.error('Failed to get cart count:', data.message);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error fetching cart count:', error);
+        });
+}
+
+// Cập nhật hiển thị số lượng giỏ hàng
+function updateCartCountDisplay(count) {
+    // Tìm tất cả các element hiển thị cart count
+    const cartCountEls = document.querySelectorAll('.cart-count, .cart-badge');
+    cartCountEls.forEach(el => {
+        el.textContent = count;
+        if (count > 0) {
+            el.style.display = 'inline';
+            el.style.visibility = 'visible';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+    
+    console.log('Cart count updated to:', count, 'Updated', cartCountEls.length, 'elements');
 }
 
 // Gán sự kiện cho nút

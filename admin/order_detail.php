@@ -87,6 +87,7 @@ closeDB($conn);
   <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <link id="pagestyle" href="../assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
+  <script src="../admin/js/order-management.js"></script>
 </head>
 
 <body class="g-sidenav-show bg-gray-100">
@@ -159,10 +160,36 @@ closeDB($conn);
                       <label class="form-label">Ghi chú của admin</label>
                       <textarea name="admin_notes" class="form-control" rows="3"><?= htmlspecialchars($order['admin_notes'] ?? '') ?></textarea>
                     </div>
-                    <button type="submit" name="update_status" class="btn bg-gradient-primary btn-sm">Cập nhật</button>
+                    <button type="button" onclick="updateOrderStatusAjax()" class="btn bg-gradient-primary btn-sm">Cập nhật</button>
+                    <button type="button" onclick="cancelOrder(<?= $order_id ?>, '')" class="btn bg-gradient-danger btn-sm ms-2">Hủy đơn hàng</button>
                   </div>
                 </div>
               </form>
+              
+              <script>
+              function updateOrderStatusAjax() {
+                  const status = document.querySelector('select[name="status"]').value;
+                  const paymentStatus = document.querySelector('select[name="payment_status"]').value;
+                  const adminNotes = document.querySelector('textarea[name="admin_notes"]').value;
+                  
+                  updateOrderStatus(<?= $order_id ?>, status, paymentStatus);
+                  
+                  // Cập nhật admin_notes riêng nếu cần
+                  if (adminNotes) {
+                      const formData = new FormData();
+                      formData.append('action', 'update_status');
+                      formData.append('order_id', <?= $order_id ?>);
+                      formData.append('status', status);
+                      formData.append('payment_status', paymentStatus);
+                      formData.append('admin_notes', adminNotes);
+                      
+                      fetch('../ajax/order.php', {
+                          method: 'POST',
+                          body: formData
+                      });
+                  }
+              }
+              </script>
 
               <hr class="my-4">
 

@@ -47,7 +47,7 @@ include 'includes/header.php';
                         $itemSubtotal = $item['price'] * $item['quantity'];
                     ?>
                     <div class="cart-item">
-                        <button class="cart-remove-btn" type="button" aria-label="Remove item">
+                        <button class="cart-remove-btn" type="button" aria-label="Remove item" data-product-id="<?= $item['product_id'] ?>" data-weight-option="<?= htmlspecialchars($item['weight_option'] ?? '') ?>">
                             <i class="bi bi-x"></i>
                         </button>
                         <div class="cart-item-image">
@@ -61,9 +61,9 @@ include 'includes/header.php';
                         </div>
                         <div class="cart-item-price"><?= number_format($item['price'], 0, ',', '.') ?>₫</div>
                         <div class="cart-item-quantity">
-                            <button class="qty-btn qty-minus" type="button" data-product-id="<?= $item['product_id'] ?>">-</button>
-                            <input type="number" class="qty-input" value="<?= $item['quantity'] ?>" min="1" data-product-id="<?= $item['product_id'] ?>" data-price="<?= $item['price'] ?>">
-                            <button class="qty-btn qty-plus" type="button" data-product-id="<?= $item['product_id'] ?>">+</button>
+                            <button class="qty-btn qty-minus" type="button" data-product-id="<?= $item['product_id'] ?>" data-weight-option="<?= htmlspecialchars($item['weight_option'] ?? '') ?>">-</button>
+                            <input type="number" class="qty-input" value="<?= $item['quantity'] ?>" min="1" data-product-id="<?= $item['product_id'] ?>" data-weight-option="<?= htmlspecialchars($item['weight_option'] ?? '') ?>" data-price="<?= $item['price'] ?>">
+                            <button class="qty-btn qty-plus" type="button" data-product-id="<?= $item['product_id'] ?>" data-weight-option="<?= htmlspecialchars($item['weight_option'] ?? '') ?>">+</button>
                         </div>
                         <div class="cart-item-subtotal"><?= number_format($itemSubtotal, 0, ',', '.') ?>₫</div>
                     </div>
@@ -166,11 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
     removeBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const cartItem = this.closest('.cart-item');
-            const input = cartItem.querySelector('.qty-input');
-            const productId = input.getAttribute('data-product-id');
+            const productId = this.getAttribute('data-product-id');
+            const weightOption = this.getAttribute('data-weight-option') || '';
             
             if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
-                removeCartItem(productId, cartItem);
+                removeCartItem(productId, weightOption, cartItem);
             }
         });
     });
@@ -185,15 +185,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hàm cập nhật số lượng sản phẩm
     function updateCartItem(input) {
         const productId = input.getAttribute('data-product-id');
+        const weightOption = input.getAttribute('data-weight-option') || '';
         const quantity = parseInt(input.value) || 1;
         const cartItem = input.closest('.cart-item');
+        
+        const bodyData = `action=update&product_id=${productId}&quantity=${quantity}`;
+        const finalBody = weightOption ? `${bodyData}&weight_option=${encodeURIComponent(weightOption)}` : bodyData;
         
         fetch('ajax/cart.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `action=update&product_id=${productId}&quantity=${quantity}`
+            body: finalBody
         })
         .then(response => response.json())
         .then(data => {
@@ -208,6 +212,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Cập nhật tổng tiền
                 updateCartTotals(data.subtotal, data.total);
+                
+                // Cập nhật cart count nếu có
+                if (data.cart_count !== undefined) {
+                    updateCartCountDisplay(data.cart_count);
+                }
             } else {
                 alert('Lỗi: ' + data.message);
                 location.reload();
@@ -220,13 +229,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Hàm xóa sản phẩm
-    function removeCartItem(productId, cartItem) {
+    function removeCartItem(productId, weightOption, cartItem) {
+        const bodyData = `action=remove&product_id=${productId}`;
+        const finalBody = weightOption ? `${bodyData}&weight_option=${encodeURIComponent(weightOption)}` : bodyData;
+        
         fetch('ajax/cart.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `action=remove&product_id=${productId}`
+            body: finalBody
         })
         .then(response => response.json())
         .then(data => {
@@ -235,6 +247,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Cập nhật tổng tiền
                 updateCartTotals(data.subtotal, data.total);
+                
+                // Cập nhật cart count nếu có
+                if (data.cart_count !== undefined) {
+                    updateCartCountDisplay(data.cart_count);
+                }
                 
                 // Kiểm tra nếu giỏ hàng trống
                 const cartItems = document.querySelectorAll('.cart-item');
@@ -267,6 +284,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Format giá
     function formatPrice(price) {
         return new Intl.NumberFormat('vi-VN').format(price) + '₫';
+    }
+    
+    // Cập nhật hiển thị số lượng giỏ hàng
+    function updateCartCountDisplay(count) {
+        // Tìm tất cả các element hiển thị cart count
+        const cartCountEls = document.querySelectorAll('.cart-count, .cart-badge');
+        cartCountEls.forEach(el => {
+            el.textContent = count;
+            if (count > 0) {
+                el.style.display = 'inline';
+                el.style.visibility = 'visible';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+        
+        console.log('Cart count updated to:', count);
     }
 });
 </script>
