@@ -23,28 +23,24 @@ include 'includes/header.php';
 
 <main class="news-page">
     <div class="container news-layout">
-        <?php
-        // Chia thành 3 cột, mỗi cột 3 bài
-        $columns = array_chunk($newsArticles, 3);
-        
-        foreach ($columns as $column): ?>
-            <div class="news-column">
-                <?php foreach ($column as $article): 
-                    $imgPath = !empty($article['featured_image']) ? 'assets/images/' . $article['featured_image'] : 'assets/images/lesterblur__2.jpg';
-                    $excerpt = !empty($article['excerpt']) ? $article['excerpt'] : (mb_substr(strip_tags($article['content']), 0, 100) . '...');
-                    ?>
-                    <a href="news-detail.php?slug=<?= htmlspecialchars($article['slug']) ?>" class="news-card">
-                        <div class="news-card-thumb">
-                            <img src="<?= htmlspecialchars($imgPath) ?>" alt="<?= htmlspecialchars($article['title']) ?>">
-                        </div>
-                        <div class="news-card-body">
-                            <h3 class="news-card-title"><?= htmlspecialchars($article['title']) ?></h3>
-                            <p class="news-card-desc"><?= htmlspecialchars($excerpt) ?></p>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endforeach; ?>
+        <div class="news-content-wrapper">
+            <?php foreach ($newsArticles as $article): 
+                $imgPath = !empty($article['featured_image']) ? 'assets/images/' . $article['featured_image'] : '';
+                $excerpt = !empty($article['excerpt']) ? $article['excerpt'] : (mb_substr(strip_tags($article['content']), 0, 100) . '...');
+                ?>
+                <a href="news-detail.php?slug=<?= htmlspecialchars($article['slug']) ?>" class="news-card">
+                    <?php if (!empty($imgPath)): ?>
+                    <div class="news-card-thumb">
+                        <img src="<?= htmlspecialchars($imgPath) ?>" alt="<?= htmlspecialchars($article['title']) ?>">
+                    </div>
+                    <?php endif; ?>
+                    <div class="news-card-body">
+                        <h3 class="news-card-title"><?= htmlspecialchars($article['title']) ?></h3>
+                        <p class="news-card-desc"><?= htmlspecialchars($excerpt) ?></p>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
 
         <aside class="recruit-sidebar">
             <div class="recruit-widget">
@@ -69,12 +65,14 @@ include 'includes/header.php';
                         echo '<p class="text-muted">Chưa có tin tức nào.</p>';
                     } else {
                         foreach ($latest as $item): 
-                            $imgPath = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                            $imgPath = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : '';
                             ?>
                             <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="latest-item">
+                                <?php if (!empty($imgPath)): ?>
                                 <div class="latest-thumb">
                                     <img src="<?= htmlspecialchars($imgPath) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
                                 </div>
+                                <?php endif; ?>
                                 <div class="latest-info">
                                     <p><?= htmlspecialchars($item['title']) ?></p>
                                 </div>

@@ -85,28 +85,28 @@ include 'includes/header.php';
                     <?= $news['content'] ?>
                 </div>
 
-                <!-- Promo Text -->
-                <div class="bg-light p-4 rounded mb-4">
-                    <p class="mb-0">Bạn đừng quên sàn TMĐT Shop Thương gia & Thị trường lúc nào cũng có sẵn những mã hàng giảm giá lên đến 60%. Đặc biệt, tất cả mã hàng đều là hàng chính hãng, chuẩn chất lượng không cần lăn tăn.</p>
-                </div>
-
                 <!-- Share Section -->
-                <div class="text-center py-4 border-top border-bottom my-4">
-                    <div class="d-flex justify-content-center gap-3 flex-wrap">
-                        <a href="#" class="btn btn-outline-primary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on Facebook">
+                <div class="recruit-share-section">
+                    <div class="social-share-icons">
+                        <a href="#" class="social-icon facebook" title="Share on Facebook">
                             <i class="bi bi-facebook"></i>
+                            <span class="social-tooltip">Share on Facebook</span>
                         </a>
-                        <a href="#" class="btn btn-outline-info btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on Twitter">
+                        <a href="#" class="social-icon twitter" title="Share on Twitter">
                             <i class="bi bi-twitter"></i>
+                            <span class="social-tooltip">Share on Twitter</span>
                         </a>
-                        <a href="#" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share via Email">
+                        <a href="#" class="social-icon email" title="Share via Email">
                             <i class="bi bi-envelope"></i>
+                            <span class="social-tooltip">Share via Email</span>
                         </a>
-                        <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Pin on Pinterest">
+                        <a href="#" class="social-icon pinterest" title="Pin on Pinterest">
                             <i class="bi bi-pinterest"></i>
+                            <span class="social-tooltip">Pin on Pinterest</span>
                         </a>
-                        <a href="#" class="btn btn-outline-primary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on LinkedIn">
+                        <a href="#" class="social-icon linkedin" title="Share on LinkedIn">
                             <i class="bi bi-linkedin"></i>
+                            <span class="social-tooltip">Share on LinkedIn</span>
                         </a>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ include 'includes/header.php';
                                 echo '<p class="text-muted">Chưa có bài viết liên quan.</p>';
                             } else {
                                 foreach ($relatedNews as $related): 
-                                    $relatedImg = !empty($related['featured_image']) ? 'assets/images/' . $related['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                                    $relatedImg = !empty($related['featured_image']) ? 'assets/images/' . $related['featured_image'] : '';
                                     $relatedDate = $related['published_at'] ? date('d', strtotime($related['published_at'])) : date('d', strtotime($related['created_at']));
                                     $relatedMonth = $related['published_at'] ? date('M', strtotime($related['published_at'])) : date('M', strtotime($related['created_at']));
                                     $relatedMonthShort = str_replace(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 
@@ -139,7 +139,9 @@ include 'includes/header.php';
                                                     <span class="related-date-day"><?= htmlspecialchars($relatedDate) ?></span>
                                                     <span class="related-date-month"><?= htmlspecialchars($relatedMonthShort) ?></span>
                                                 </div>
-                                                <img src="<?= htmlspecialchars($relatedImg) ?>" alt="<?= htmlspecialchars($related['title']) ?>">
+                                                <?php if (!empty($relatedImg)): ?>
+                                                    <img src="<?= htmlspecialchars($relatedImg) ?>" alt="<?= htmlspecialchars($related['title']) ?>">
+                                                <?php endif; ?>
                                             </div>
                                             <div class="related-card-content">
                                                 <h4 class="related-card-title"><?= htmlspecialchars($related['title']) ?></h4>
@@ -159,50 +161,50 @@ include 'includes/header.php';
             </div>
 
                 <!-- Comment Form -->
-                <div class="bg-light p-4 p-md-5 rounded mt-5">
-                    <h3 class="fw-bold mb-3">Để lại một bình luận</h3>
-                    <p class="text-muted small mb-4">Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
-                
-                <?php
-                // Xử lý form comment
-                $commentSuccess = false;
-                $commentError = '';
-                
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
-                    $commentName = trim($_POST['name'] ?? '');
-                    $commentEmail = trim($_POST['email'] ?? '');
-                    $commentMessage = trim($_POST['comment'] ?? '');
+                <div class="recruit-comment-section">
+                    <h3 class="comment-section-title">Để lại một bình luận</h3>
+                    <p class="comment-notice">Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
                     
-                    if (empty($commentName)) {
-                        $commentError = 'Vui lòng nhập tên';
-                    } elseif (empty($commentEmail)) {
-                        $commentError = 'Vui lòng nhập email';
-                    } elseif (!filter_var($commentEmail, FILTER_VALIDATE_EMAIL)) {
-                        $commentError = 'Email không hợp lệ';
-                    } elseif (empty($commentMessage)) {
-                        $commentError = 'Vui lòng nhập bình luận';
-                    } else {
-                        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-                        $subject = 'Bình luận về tin tức: ' . $news['title'];
+                    <?php
+                    // Xử lý form comment
+                    $commentSuccess = false;
+                    $commentError = '';
+                    
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
+                        $commentName = trim($_POST['name'] ?? '');
+                        $commentEmail = trim($_POST['email'] ?? '');
+                        $commentMessage = trim($_POST['comment'] ?? '');
                         
-                        $commentSql = "INSERT INTO contact (name, email, phone, subject, message, ip_address, status) 
-                                       VALUES (?, ?, ?, ?, ?, ?, 'new')";
-                        
-                        $commentStmt = $conn->prepare($commentSql);
-                        $phone = '';
-                        $commentStmt->bind_param("ssssss", $commentName, $commentEmail, $phone, $subject, $commentMessage, $ipAddress);
-                        
-                        if ($commentStmt->execute()) {
-                            $commentSuccess = true;
+                        if (empty($commentName)) {
+                            $commentError = 'Vui lòng nhập tên';
+                        } elseif (empty($commentEmail)) {
+                            $commentError = 'Vui lòng nhập email';
+                        } elseif (!filter_var($commentEmail, FILTER_VALIDATE_EMAIL)) {
+                            $commentError = 'Email không hợp lệ';
+                        } elseif (empty($commentMessage)) {
+                            $commentError = 'Vui lòng nhập bình luận';
                         } else {
-                            $commentError = 'Có lỗi xảy ra khi gửi bình luận. Vui lòng thử lại.';
+                            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                            $subject = 'Bình luận về tin tức: ' . $news['title'];
+                            
+                            $commentSql = "INSERT INTO contact (name, email, phone, subject, message, ip_address, status) 
+                                           VALUES (?, ?, ?, ?, ?, ?, 'new')";
+                            
+                            $commentStmt = $conn->prepare($commentSql);
+                            $phone = '';
+                            $commentStmt->bind_param("ssssss", $commentName, $commentEmail, $phone, $subject, $commentMessage, $ipAddress);
+                            
+                            if ($commentStmt->execute()) {
+                                $commentSuccess = true;
+                            } else {
+                                $commentError = 'Có lỗi xảy ra khi gửi bình luận. Vui lòng thử lại.';
+                            }
+                            
+                            $commentStmt->close();
                         }
-                        
-                        $commentStmt->close();
                     }
-                }
-                ?>
-                
+                    ?>
+                    
                     <?php if ($commentSuccess): ?>
                         <div class="alert alert-success mb-3" role="alert">
                             <i class="bi bi-check-circle"></i> Cảm ơn bạn đã bình luận! Bình luận của bạn đang chờ được duyệt.
@@ -213,70 +215,70 @@ include 'includes/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <form action="news-detail.php?slug=<?= htmlspecialchars($slug) ?>" method="post">
-                        <div class="mb-3">
-                            <label for="comment" class="form-label fw-semibold">Bình luận *</label>
-                            <textarea class="form-control" id="comment" name="comment" rows="6" required><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
+                    <form class="comment-form" action="news-detail.php?slug=<?= htmlspecialchars($slug) ?>" method="post">
+                        <div class="form-group">
+                            <label for="comment">Bình luận *</label>
+                            <textarea id="comment" name="comment" rows="6" required><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
                         </div>
                         
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label for="comment-name" class="form-label fw-semibold">Tên *</label>
-                                <input type="text" class="form-control" id="comment-name" name="name" 
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="comment-name">Tên *</label>
+                                <input type="text" id="comment-name" name="name" 
                                        value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>" required>
                             </div>
-                            <div class="col-md-4">
-                                <label for="comment-email" class="form-label fw-semibold">Email *</label>
-                                <input type="email" class="form-control" id="comment-email" name="email" 
+                            <div class="form-group">
+                                <label for="comment-email">Email *</label>
+                                <input type="email" id="comment-email" name="email" 
                                        value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" required>
                             </div>
-                            <div class="col-md-4">
-                                <label for="comment-website" class="form-label fw-semibold">Trang web</label>
-                                <input type="url" class="form-control" id="comment-website" name="website" 
+                            <div class="form-group">
+                                <label for="comment-website">Trang web</label>
+                                <input type="url" id="comment-website" name="website" 
                                        value="<?= isset($_POST['website']) ? htmlspecialchars($_POST['website']) : '' ?>">
                             </div>
                         </div>
                         
-                        <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" id="save-info" name="save_info" <?= isset($_POST['save_info']) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="save-info">
-                                Lưu tên của tôi, email, và trang web trong trình duyệt này cho lần bình luận kế tiếp của tôi.
-                            </label>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="save-info" name="save_info" <?= isset($_POST['save_info']) ? 'checked' : '' ?>>
+                            <label for="save-info">Lưu tên của tôi, email, và trang web trong trình duyệt này cho lần bình luận kế tiếp của tôi.</label>
                         </div>
                         
-                        <button type="submit" name="submit_comment" class="btn btn-success text-uppercase fw-bold px-4">GỬI BÌNH LUẬN</button>
+                        <button type="submit" name="submit_comment" class="comment-submit-btn">GỬI BÌNH LUẬN</button>
                     </form>
                 </div>
             </article>
 
-            <aside class="col-lg-3 order-lg-2">
-                <div class="card border-0 mb-4">
-                    <div class="card-header bg-success text-white fw-bold text-uppercase" style="font-size: 0.875rem;">
-                        CHUYÊN MỤC TIN TỨC
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Thời trang &amp; cuộc sống</a></li>
-                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Tin công nghệ</a></li>
-                        <li class="list-group-item active"><a href="#" class="text-decoration-none text-white">Tin tức</a></li>
-                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Tuyển dụng</a></li>
+            <aside class="col-lg-3 order-lg-2 recruit-sidebar">
+                <div class="recruit-widget">
+                    <h4>CHUYÊN MỤC TIN TỨC</h4>
+                    <ul class="recruit-cats">
+                        <li><a href="#">Thời trang &amp; cuộc sống</a></li>
+                        <li><a href="#">Tin công nghệ</a></li>
+                        <li class="active"><a href="#">Tin tức</a></li>
+                        <li><a href="#">Tuyển dụng</a></li>
                     </ul>
                 </div>
 
-                <div class="card border-0">
-                    <div class="card-header bg-success text-white fw-bold text-uppercase" style="font-size: 0.875rem;">
-                        TIN TỨC MỚI NHẤT
-                    </div>
-                    <div class="card-body p-3">
+                <div class="recruit-widget">
+                    <h4>TIN TỨC MỚI NHẤT</h4>
+                    <div class="recruit-latest">
                         <?php
                         if (empty($latestNews)) {
-                            echo '<p class="text-muted mb-0 small">Chưa có tin tức nào.</p>';
+                            echo '<p class="text-muted">Chưa có tin tức nào.</p>';
                         } else {
                             foreach ($latestNews as $item): 
-                                $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                                $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : '';
                                 ?>
-                                <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="d-flex gap-3 text-decoration-none text-dark mb-3 pb-3 border-bottom">
-                                    <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="rounded" style="width: 64px; height: 64px; object-fit: cover;">
-                                    <p class="mb-0 small"><?= htmlspecialchars($item['title']) ?></p>
+                                <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="latest-item">
+                                    <?php if (!empty($itemImg)): ?>
+                                    <div class="latest-thumb">
+                                        <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="latest-info">
+                                        <p><?= htmlspecialchars($item['title']) ?></p>
+                                    </div>
                                 </a>
                             <?php endforeach;
                         }

@@ -97,23 +97,98 @@ include 'includes/header.php';
 
             <div class="recruit-detail-body">
                 <h3>Mô tả công việc</h3>
-                <?= nl2br(htmlspecialchars($job['description'])) ?>
+                <div class="recruit-content-text">
+                    <?php 
+                    // Nếu nội dung chứa HTML tags, hiển thị trực tiếp
+                    // Nếu không, chuyển đổi xuống dòng thành <br>
+                    $description = $job['description'];
+                    if (strip_tags($description) !== $description) {
+                        // Có HTML tags, hiển thị trực tiếp
+                        echo $description;
+                    } else {
+                        // Không có HTML, chuyển đổi xuống dòng
+                        echo nl2br(htmlspecialchars($description));
+                    }
+                    ?>
+                </div>
                 
                 <?php if (!empty($job['requirements'])): ?>
                 <h3 class="mt-4">Yêu cầu ứng viên</h3>
-                <?= nl2br(htmlspecialchars($job['requirements'])) ?>
+                <div class="recruit-content-text">
+                    <?php 
+                    $requirements = $job['requirements'];
+                    if (strip_tags($requirements) !== $requirements) {
+                        echo $requirements;
+                    } else {
+                        // Chuyển đổi xuống dòng thành danh sách nếu có dấu gạch đầu dòng hoặc số
+                        $lines = explode("\n", $requirements);
+                        $hasListFormat = false;
+                        foreach ($lines as $line) {
+                            $trimmed = trim($line);
+                            if (preg_match('/^[-•*]\s+|^\d+[\.\)]\s+/', $trimmed)) {
+                                $hasListFormat = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($hasListFormat) {
+                            echo '<ul>';
+                            foreach ($lines as $line) {
+                                $trimmed = trim($line);
+                                if (!empty($trimmed)) {
+                                    // Loại bỏ dấu gạch đầu dòng hoặc số
+                                    $cleanLine = preg_replace('/^[-•*]\s+|^\d+[\.\)]\s+/', '', $trimmed);
+                                    echo '<li>' . htmlspecialchars($cleanLine) . '</li>';
+                                }
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo nl2br(htmlspecialchars($requirements));
+                        }
+                    }
+                    ?>
+                </div>
                 <?php endif; ?>
                 
                 <?php if (!empty($job['benefits'])): ?>
                 <h3 class="mt-4">Quyền lợi</h3>
-                <?= nl2br(htmlspecialchars($job['benefits'])) ?>
+                <div class="recruit-content-text">
+                    <?php 
+                    $benefits = $job['benefits'];
+                    if (strip_tags($benefits) !== $benefits) {
+                        echo $benefits;
+                    } else {
+                        // Chuyển đổi xuống dòng thành danh sách nếu có dấu gạch đầu dòng hoặc số
+                        $lines = explode("\n", $benefits);
+                        $hasListFormat = false;
+                        foreach ($lines as $line) {
+                            $trimmed = trim($line);
+                            if (preg_match('/^[-•*]\s+|^\d+[\.\)]\s+/', $trimmed)) {
+                                $hasListFormat = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($hasListFormat) {
+                            echo '<ul>';
+                            foreach ($lines as $line) {
+                                $trimmed = trim($line);
+                                if (!empty($trimmed)) {
+                                    // Loại bỏ dấu gạch đầu dòng hoặc số
+                                    $cleanLine = preg_replace('/^[-•*]\s+|^\d+[\.\)]\s+/', '', $trimmed);
+                                    echo '<li>' . htmlspecialchars($cleanLine) . '</li>';
+                                }
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo nl2br(htmlspecialchars($benefits));
+                        }
+                    }
+                    ?>
+                </div>
                 <?php endif; ?>
             </div>
 
-            <!-- Promo Text -->
-            <div class="recruit-detail-promo">
-                <p>Bạn đừng quên sàn TMĐT Shop Thương gia & Thị trường lúc nào cũng có sẵn những mã hàng giảm giá lên đến 60%. Đặc biệt, tất cả mã hàng đều là hàng chính hãng, chuẩn chất lượng không cần lăn tăn.</p>
-            </div>
 
             <!-- Share Section -->
             <div class="recruit-share-section">
@@ -276,12 +351,14 @@ include 'includes/header.php';
                         echo '<p class="text-muted">Chưa có tin tức nào.</p>';
                     } else {
                         foreach ($latestNews as $item): 
-                            $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                            $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : '';
                             ?>
                             <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="latest-item">
+                                <?php if (!empty($itemImg)): ?>
                                 <div class="latest-thumb">
                                     <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
                                 </div>
+                                <?php endif; ?>
                                 <div class="latest-info">
                                     <p><?= htmlspecialchars($item['title']) ?></p>
                                 </div>
