@@ -25,6 +25,11 @@ if (empty($currentPage) || $currentPage == '/' || $currentPage == 'index.php') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
 
+    <!-- Google Fonts - Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -33,6 +38,13 @@ if (empty($currentPage) || $currentPage == '/' || $currentPage == 'index.php') {
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Global Font Style -->
+    <style>
+        * {
+            font-family: 'Nunito', sans-serif !important;
+        }
+    </style>
 </head>
 <?php
 $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
@@ -189,6 +201,7 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
         'products.php' => 'SẢN PHẨM',
         'recruitment.php' => 'TUYỂN DỤNG',
         'news.php' => 'TIN TỨC',
+        'news-detail.php' => 'CHI TIẾT TIN TỨC',
         'contact.php' => 'LIÊN HỆ'
     ];
     $pageNames = [
@@ -196,16 +209,47 @@ $bodyClass = 'page-' . pathinfo($currentPage, PATHINFO_FILENAME);
         'products.php' => 'Sản phẩm',
         'recruitment.php' => 'Tuyển dụng',
         'news.php' => 'Tin tức',
+        'news-detail.php' => 'Tin tức',
         'contact.php' => 'Liên hệ'
     ];
-    $currentPageTitle = $pageTitles[$currentPage] ?? 'TRANG';
-    $currentPageName = $pageNames[$currentPage] ?? 'Trang';
+    
+    // Xử lý đặc biệt cho trang chi tiết tin tức
+    $breadcrumbPath = '';
+    $breadcrumbTitle = $pageTitles[$currentPage] ?? 'TRANG';
+    
+    if ($currentPage == 'news-detail.php') {
+        // Lấy thông tin tin tức từ URL nếu chưa có
+        if (!isset($news) || empty($news)) {
+            $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+            if (!empty($slug)) {
+                require_once __DIR__ . '/../config/database.php';
+                require_once __DIR__ . '/functions.php';
+                $tempConn = connectDB();
+                $news = getNewsBySlug($tempConn, $slug);
+                closeDB($tempConn);
+            }
+        }
+        
+        if (isset($news) && !empty($news['title'])) {
+            // Trang chi tiết tin tức: Trang chủ / Tin tức / Tiêu đề bài tin tức
+            $newsTitle = htmlspecialchars($news['title']);
+            $breadcrumbPath = 'Trang chủ / <a href="news.php" style="color: inherit; text-decoration: none;">Tin tức</a> / <span>' . $newsTitle . '</span>';
+            $breadcrumbTitle = 'CHI TIẾT TIN TỨC';
+        } else {
+            // Fallback nếu không tìm thấy tin tức
+            $breadcrumbPath = 'Trang chủ / <span>Tin tức</span>';
+        }
+    } else {
+        // Các trang khác: Trang chủ / Tên trang
+        $currentPageName = $pageNames[$currentPage] ?? 'Trang';
+        $breadcrumbPath = 'Trang chủ / <span>' . htmlspecialchars($currentPageName) . '</span>';
+    }
 ?>
 <div class="breadcrumb-banner">
     <div class="breadcrumb-overlay"></div>
     <div class="container">
-        <h1 class="breadcrumb-title"><?= htmlspecialchars($currentPageTitle) ?></h1>
-        <p class="breadcrumb-path">Trang chủ / <span><?= htmlspecialchars($currentPageName) ?></span></p>
+        <h1 class="breadcrumb-title"><?= htmlspecialchars($breadcrumbTitle) ?></h1>
+        <p class="breadcrumb-path"><?= $breadcrumbPath ?></p>
     </div>
 </div>
 <?php endif; ?>

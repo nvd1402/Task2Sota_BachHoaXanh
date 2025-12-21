@@ -22,9 +22,11 @@ if (empty($cartItems)) {
 // Xử lý đặt hàng
 $orderPlaced = false;
 $orderNumber = '';
+$error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    // Lấy thông tin từ form
+    // Lấy thông tin từ form và làm sạch dữ liệu
     $firstName = trim($_POST['first_name'] ?? '');
     $lastName = trim($_POST['last_name'] ?? '');
     $companyName = trim($_POST['company_name'] ?? '');
@@ -37,10 +39,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $email = trim($_POST['email'] ?? '');
     $orderNotes = trim($_POST['order_notes'] ?? '');
     
-    // Validate
-    if (empty($firstName) || empty($lastName) || empty($address1) || empty($city) || empty($phone) || empty($email)) {
-        $error = 'Vui lòng điền đầy đủ thông tin bắt buộc';
-    } else {
+    // Validate dữ liệu đầu vào
+    $errors = [];
+    
+    // Kiểm tra các trường bắt buộc
+    if (empty($firstName)) {
+        $errors[] = 'Vui lòng nhập tên';
+    } elseif (strlen($firstName) < 2) {
+        $errors[] = 'Tên phải có ít nhất 2 ký tự';
+    }
+    
+    if (empty($lastName)) {
+        $errors[] = 'Vui lòng nhập họ';
+    } elseif (strlen($lastName) < 2) {
+        $errors[] = 'Họ phải có ít nhất 2 ký tự';
+    }
+    
+    if (empty($address1)) {
+        $errors[] = 'Vui lòng nhập địa chỉ';
+    }
+    
+    if (empty($city)) {
+        $errors[] = 'Vui lòng nhập thành phố';
+    }
+    
+    // Validate số điện thoại (chỉ số và khoảng trắng, dấu +, dấu -)
+    if (empty($phone)) {
+        $errors[] = 'Vui lòng nhập số điện thoại';
+    } elseif (!preg_match('/^[\d\s\+\-\(\)]{10,15}$/', $phone)) {
+        $errors[] = 'Số điện thoại không hợp lệ';
+    }
+    
+    // Validate email
+    if (empty($email)) {
+        $errors[] = 'Vui lòng nhập email';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Email không hợp lệ';
+    }
+    
+    if (empty($errors)) {
         // Tạo mã đơn hàng
         $orderNumber = 'ORD' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
@@ -137,6 +174,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $error = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
             $stmt->close();
         }
+    } else {
+        // Hiển thị tất cả lỗi validation
+        $error = implode('<br>', $errors);
     }
 }
 
@@ -159,6 +199,19 @@ include 'includes/header.php';
 
     <!-- Checkout Content -->
     <div class="container">
+        <!-- Error/Success Messages -->
+        <?php if (!empty($error)): ?>
+        <div class="alert alert-error" style="background-color: #fee; border: 1px solid #fcc; color: #c33; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <strong>Lỗi:</strong> <?= htmlspecialchars($error) ?>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($success)): ?>
+        <div class="alert alert-success" style="background-color: #efe; border: 1px solid #cfc; color: #3c3; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <strong>Thành công:</strong> <?= htmlspecialchars($success) ?>
+        </div>
+        <?php endif; ?>
+        
         <!-- Coupon Section -->
         <div class="checkout-coupon-section">
             <p class="coupon-link">
@@ -273,12 +326,13 @@ include 'includes/header.php';
 
                     <div class="form-group">
                         <label for="phone">Phone *</label>
-                        <input type="tel" id="phone" name="phone" required>
+                        <input type="tel" id="phone" name="phone" pattern="[\d\s\+\-\(\)]{10,15}" placeholder="VD: 0901234567" required>
+                        <small style="color: #666; font-size: 12px;">Nhập số điện thoại hợp lệ (10-15 số)</small>
                     </div>
 
                     <div class="form-group">
                         <label for="email">Email address *</label>
-                        <input type="email" id="email" name="email" required>
+                        <input type="email" id="email" name="email" placeholder="example@email.com" required>
                     </div>
 
                     <h3 class="additional-title">ADDITIONAL INFORMATION</h3>
@@ -381,13 +435,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateForm() {
         let allFilled = true;
+        let isValid = true;
+        
         requiredFields.forEach(function(field) {
-            if (!field.value.trim()) {
+            const value = field.value.trim();
+            
+            // Kiểm tra trường bắt buộc
+            if (!value) {
                 allFilled = false;
+                field.style.borderColor = '#d0021b';
+            } else {
+                // Validate email
+                if (field.type === 'email' && value) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) {
+                        isValid = false;
+                        field.style.borderColor = '#d0021b';
+                    } else {
+                        field.style.borderColor = '#ddd';
+                    }
+                }
+                // Validate phone
+                else if (field.type === 'tel' && value) {
+                    const phoneRegex = /^[\d\s\+\-\(\)]{10,15}$/;
+                    if (!phoneRegex.test(value)) {
+                        isValid = false;
+                        field.style.borderColor = '#d0021b';
+                    } else {
+                        field.style.borderColor = '#ddd';
+                    }
+                }
+                // Các trường khác
+                else {
+                    field.style.borderColor = '#ddd';
+                }
             }
         });
         
-        if (allFilled) {
+        if (allFilled && isValid) {
             placeOrderBtn.disabled = false;
             placeOrderBtn.style.opacity = '1';
             placeOrderBtn.style.cursor = 'pointer';
@@ -423,11 +508,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (allFilled) {
+            // Validate email format
+            const emailField = billingForm.querySelector('[type="email"]');
+            let emailValid = true;
+            if (emailField && emailField.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailField.value.trim())) {
+                    emailValid = false;
+                    emailField.style.borderColor = '#d0021b';
+                }
+            }
+            
+            // Validate phone format
+            const phoneField = billingForm.querySelector('[type="tel"]');
+            let phoneValid = true;
+            if (phoneField && phoneField.value.trim()) {
+                const phoneRegex = /^[\d\s\+\-\(\)]{10,15}$/;
+                if (!phoneRegex.test(phoneField.value.trim())) {
+                    phoneValid = false;
+                    phoneField.style.borderColor = '#d0021b';
+                }
+            }
+
+            if (allFilled && emailValid && phoneValid) {
                 // Submit form
                 billingForm.submit();
             } else {
-                alert('Vui lòng điền đầy đủ các trường bắt buộc.');
+                let errorMsg = 'Vui lòng điền đầy đủ các trường bắt buộc.';
+                if (!emailValid) {
+                    errorMsg += '\n- Email không hợp lệ.';
+                }
+                if (!phoneValid) {
+                    errorMsg += '\n- Số điện thoại không hợp lệ (10-15 số).';
+                }
+                alert(errorMsg);
             }
         });
     }

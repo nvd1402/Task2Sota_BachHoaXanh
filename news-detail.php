@@ -70,61 +70,51 @@ $latestNews = $latestNewsData['news'];
 include 'includes/header.php';
 ?>
 
-<main class="recruit-detail-page">
-    <div class="container recruit-detail-layout">
-        <!-- Nội dung chi tiết bài viết -->
-        <article class="recruit-detail-content">
-            <h1 class="recruit-detail-title"><?= htmlspecialchars($news['title']) ?></h1>
-            
-            <div class="recruit-detail-meta">
-                <span class="recruit-meta-text">POSTED ON <?= htmlspecialchars($publishedDateFormatted) ?> BY <?= htmlspecialchars($authorName) ?></span>
-            </div>
-
-            <?php if (!empty($news['featured_image'])): ?>
-            <div class="recruit-detail-image mb-4">
-                <img src="assets/images/<?= htmlspecialchars($news['featured_image']) ?>" alt="<?= htmlspecialchars($news['title']) ?>" class="img-fluid">
-            </div>
-            <?php endif; ?>
-
-            <div class="recruit-detail-body">
-                <?= nl2br(htmlspecialchars($news['content'])) ?>
-            </div>
-
-            <!-- Promo Text -->
-            <div class="recruit-detail-promo">
-                <p>Bạn đừng quên sàn TMĐT Shop Thương gia & Thị trường lúc nào cũng có sẵn những mã hàng giảm giá lên đến 60%. Đặc biệt, tất cả mã hàng đều là hàng chính hãng, chuẩn chất lượng không cần lăn tăn.</p>
-            </div>
-
-            <!-- Share Section -->
-            <div class="recruit-share-section">
-                <div class="social-share-icons">
-                    <a href="#" class="social-icon facebook" title="Share on Facebook">
-                        <i class="bi bi-facebook"></i>
-                        <span class="social-tooltip">Share on Facebook</span>
-                    </a>
-                    <a href="#" class="social-icon twitter" title="Share on Twitter">
-                        <i class="bi bi-twitter"></i>
-                        <span class="social-tooltip">Share on Twitter</span>
-                    </a>
-                    <a href="#" class="social-icon email" title="Share via Email">
-                        <i class="bi bi-envelope"></i>
-                        <span class="social-tooltip">Share via Email</span>
-                    </a>
-                    <a href="#" class="social-icon pinterest" title="Pin on Pinterest">
-                        <i class="bi bi-pinterest"></i>
-                        <span class="social-tooltip">Pin on Pinterest</span>
-                    </a>
-                    <a href="#" class="social-icon linkedin" title="Share on LinkedIn">
-                        <i class="bi bi-linkedin"></i>
-                        <span class="social-tooltip">Share on LinkedIn</span>
-                    </a>
+<main class="py-4 py-md-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Nội dung chi tiết bài viết -->
+            <article class="col-lg-9">
+                <h1 class="fw-bold mb-3 mb-md-4" style="font-size: clamp(1.5rem, 4vw, 2rem);"><?= htmlspecialchars($news['title']) ?></h1>
+                
+                <div class="mb-4 pb-3 border-bottom">
+                    <small class="text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">POSTED ON <?= htmlspecialchars($publishedDateFormatted) ?> BY <?= htmlspecialchars($authorName) ?></small>
                 </div>
-            </div>
 
-            <!-- Related Articles -->
-            <div class="recruit-related-section">
-                <h3 class="related-title">Bài viết liên quan</h3>
-                <div class="related-carousel-wrapper">
+                <div class="news-content mb-4">
+                    <?= $news['content'] ?>
+                </div>
+
+                <!-- Promo Text -->
+                <div class="bg-light p-4 rounded mb-4">
+                    <p class="mb-0">Bạn đừng quên sàn TMĐT Shop Thương gia & Thị trường lúc nào cũng có sẵn những mã hàng giảm giá lên đến 60%. Đặc biệt, tất cả mã hàng đều là hàng chính hãng, chuẩn chất lượng không cần lăn tăn.</p>
+                </div>
+
+                <!-- Share Section -->
+                <div class="text-center py-4 border-top border-bottom my-4">
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="#" class="btn btn-outline-primary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on Twitter">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share via Email">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Pin on Pinterest">
+                            <i class="bi bi-pinterest"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Share on LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Related Articles -->
+                <div class="mt-5 pt-4">
+                    <h3 class="fw-bold mb-4">Bài viết liên quan</h3>
+                    <div class="related-carousel-wrapper position-relative">
                     <button class="related-nav-btn related-prev" aria-label="Previous">
                         <i class="bi bi-chevron-left"></i>
                     </button>
@@ -168,10 +158,10 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <!-- Comment Form -->
-            <div class="recruit-comment-section">
-                <h3 class="comment-section-title">Để lại một bình luận</h3>
-                <p class="comment-notice">Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
+                <!-- Comment Form -->
+                <div class="bg-light p-4 p-md-5 rounded mt-5">
+                    <h3 class="fw-bold mb-3">Để lại một bình luận</h3>
+                    <p class="text-muted small mb-4">Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
                 
                 <?php
                 // Xử lý form comment
@@ -213,85 +203,88 @@ include 'includes/header.php';
                 }
                 ?>
                 
-                <?php if ($commentSuccess): ?>
-                    <div class="alert alert-success mb-3" role="alert">
-                        <i class="bi bi-check-circle"></i> Cảm ơn bạn đã bình luận! Bình luận của bạn đang chờ được duyệt.
-                    </div>
-                <?php elseif ($commentError): ?>
-                    <div class="alert alert-danger mb-3" role="alert">
-                        <i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($commentError) ?>
-                    </div>
-                <?php endif; ?>
-                
-                <form class="comment-form" action="news-detail.php?slug=<?= htmlspecialchars($slug) ?>" method="post">
-                    <div class="form-group">
-                        <label for="comment">Bình luận *</label>
-                        <textarea id="comment" name="comment" rows="6" required><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="comment-name">Tên *</label>
-                            <input type="text" id="comment-name" name="name" 
-                                   value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>" required>
+                    <?php if ($commentSuccess): ?>
+                        <div class="alert alert-success mb-3" role="alert">
+                            <i class="bi bi-check-circle"></i> Cảm ơn bạn đã bình luận! Bình luận của bạn đang chờ được duyệt.
                         </div>
-                        <div class="form-group">
-                            <label for="comment-email">Email *</label>
-                            <input type="email" id="comment-email" name="email" 
-                                   value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" required>
+                    <?php elseif ($commentError): ?>
+                        <div class="alert alert-danger mb-3" role="alert">
+                            <i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($commentError) ?>
                         </div>
-                        <div class="form-group">
-                            <label for="comment-website">Trang web</label>
-                            <input type="url" id="comment-website" name="website" 
-                                   value="<?= isset($_POST['website']) ? htmlspecialchars($_POST['website']) : '' ?>">
+                    <?php endif; ?>
+                    
+                    <form action="news-detail.php?slug=<?= htmlspecialchars($slug) ?>" method="post">
+                        <div class="mb-3">
+                            <label for="comment" class="form-label fw-semibold">Bình luận *</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="6" required><?= isset($_POST['comment']) ? htmlspecialchars($_POST['comment']) : '' ?></textarea>
                         </div>
-                    </div>
-                    
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="save-info" name="save_info" <?= isset($_POST['save_info']) ? 'checked' : '' ?>>
-                        <label for="save-info">Lưu tên của tôi, email, và trang web trong trình duyệt này cho lần bình luận kế tiếp của tôi.</label>
-                    </div>
-                    
-                    <button type="submit" name="submit_comment" class="comment-submit-btn">GỬI BÌNH LUẬN</button>
-                </form>
-            </div>
-        </article>
-
-        <aside class="recruit-sidebar">
-            <div class="recruit-widget">
-                <h4>CHUYÊN MỤC TIN TỨC</h4>
-                <ul class="recruit-cats">
-                    <li><a href="#">Thời trang &amp; cuộc sống</a></li>
-                    <li><a href="#">Tin công nghệ</a></li>
-                    <li class="active"><a href="#">Tin tức</a></li>
-                    <li><a href="#">Tuyển dụng</a></li>
-                </ul>
-            </div>
-
-            <div class="recruit-widget">
-                <h4>TIN TỨC MỚI NHẤT</h4>
-                <div class="recruit-latest">
-                    <?php
-                    if (empty($latestNews)) {
-                        echo '<p class="text-muted">Chưa có tin tức nào.</p>';
-                    } else {
-                        foreach ($latestNews as $item): 
-                            $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
-                            ?>
-                            <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="latest-item">
-                                <div class="latest-thumb">
-                                    <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>">
-                                </div>
-                                <div class="latest-info">
-                                    <p><?= htmlspecialchars($item['title']) ?></p>
-                                </div>
-                            </a>
-                        <?php endforeach;
-                    }
-                    ?>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="comment-name" class="form-label fw-semibold">Tên *</label>
+                                <input type="text" class="form-control" id="comment-name" name="name" 
+                                       value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="comment-email" class="form-label fw-semibold">Email *</label>
+                                <input type="email" class="form-control" id="comment-email" name="email" 
+                                       value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="comment-website" class="form-label fw-semibold">Trang web</label>
+                                <input type="url" class="form-control" id="comment-website" name="website" 
+                                       value="<?= isset($_POST['website']) ? htmlspecialchars($_POST['website']) : '' ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="save-info" name="save_info" <?= isset($_POST['save_info']) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="save-info">
+                                Lưu tên của tôi, email, và trang web trong trình duyệt này cho lần bình luận kế tiếp của tôi.
+                            </label>
+                        </div>
+                        
+                        <button type="submit" name="submit_comment" class="btn btn-success text-uppercase fw-bold px-4">GỬI BÌNH LUẬN</button>
+                    </form>
                 </div>
-            </div>
-        </aside>
+            </article>
+
+            <aside class="col-lg-3 order-lg-2">
+                <div class="card border-0 mb-4">
+                    <div class="card-header bg-success text-white fw-bold text-uppercase" style="font-size: 0.875rem;">
+                        CHUYÊN MỤC TIN TỨC
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Thời trang &amp; cuộc sống</a></li>
+                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Tin công nghệ</a></li>
+                        <li class="list-group-item active"><a href="#" class="text-decoration-none text-white">Tin tức</a></li>
+                        <li class="list-group-item"><a href="#" class="text-decoration-none text-dark">Tuyển dụng</a></li>
+                    </ul>
+                </div>
+
+                <div class="card border-0">
+                    <div class="card-header bg-success text-white fw-bold text-uppercase" style="font-size: 0.875rem;">
+                        TIN TỨC MỚI NHẤT
+                    </div>
+                    <div class="card-body p-3">
+                        <?php
+                        if (empty($latestNews)) {
+                            echo '<p class="text-muted mb-0 small">Chưa có tin tức nào.</p>';
+                        } else {
+                            foreach ($latestNews as $item): 
+                                $itemImg = !empty($item['featured_image']) ? 'assets/images/' . $item['featured_image'] : 'assets/images/lesterblur__2.jpg';
+                                ?>
+                                <a href="news-detail.php?slug=<?= htmlspecialchars($item['slug']) ?>" class="d-flex gap-3 text-decoration-none text-dark mb-3 pb-3 border-bottom">
+                                    <img src="<?= htmlspecialchars($itemImg) ?>" alt="<?= htmlspecialchars($item['title']) ?>" class="rounded" style="width: 64px; height: 64px; object-fit: cover;">
+                                    <p class="mb-0 small"><?= htmlspecialchars($item['title']) ?></p>
+                                </a>
+                            <?php endforeach;
+                        }
+                        ?>
+                    </div>
+                </div>
+            </aside>
+        </div>
     </div>
 </main>
 
@@ -302,4 +295,270 @@ if (isset($conn)) {
 }
 include 'includes/footer.php'; 
 ?>
+
+<script>
+(function() {
+    const carouselContainer = document.querySelector('.related-carousel-container');
+    const carouselTrack = document.querySelector('.related-carousel-track');
+    const cards = document.querySelectorAll('.related-article-card');
+    const prevBtn = document.querySelector('.related-prev');
+    const nextBtn = document.querySelector('.related-next');
+    
+    if (!carouselContainer || !carouselTrack) return;
+    
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let isScrolling = false;
+    let scrollTimeout;
+    let velocity = 0;
+    let lastScrollLeft = 0;
+    let lastTime = Date.now();
+    
+    // Tính toán scroll limits
+    function getScrollLimits() {
+        const trackWidth = carouselTrack.scrollWidth;
+        const containerWidth = carouselContainer.offsetWidth;
+        const maxScrollLeft = Math.max(0, trackWidth - containerWidth);
+        return {
+            min: 0,
+            max: maxScrollLeft,
+            trackWidth: trackWidth,
+            containerWidth: containerWidth
+        };
+    }
+    
+    // Giới hạn scroll position
+    function constrainScroll(scrollValue) {
+        const limits = getScrollLimits();
+        return Math.max(limits.min, Math.min(limits.max, scrollValue));
+    }
+    
+    // Ngăn click khi đang scroll
+    function setScrolling() {
+        isScrolling = true;
+        cards.forEach(card => card.classList.add('is-scrolling'));
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+            cards.forEach(card => card.classList.remove('is-scrolling'));
+        }, 150);
+    }
+    
+    // Tính toán velocity cho momentum scrolling
+    function updateVelocity() {
+        const currentScrollLeft = carouselContainer.scrollLeft;
+        const currentTime = Date.now();
+        const timeDiff = currentTime - lastTime;
+        
+        if (timeDiff > 0) {
+            velocity = (currentScrollLeft - lastScrollLeft) / timeDiff;
+        }
+        
+        lastScrollLeft = currentScrollLeft;
+        lastTime = currentTime;
+    }
+    
+    // Momentum scrolling với giới hạn
+    function applyMomentum() {
+        if (Math.abs(velocity) > 0.1) {
+            const friction = 0.95;
+            velocity *= friction;
+            const newScrollLeft = constrainScroll(carouselContainer.scrollLeft + velocity * 16);
+            carouselContainer.scrollLeft = newScrollLeft;
+            
+            // Dừng momentum nếu đã đến giới hạn
+            const limits = getScrollLimits();
+            if ((newScrollLeft <= limits.min && velocity < 0) || 
+                (newScrollLeft >= limits.max && velocity > 0)) {
+                velocity = 0;
+                return;
+            }
+            
+            if (Math.abs(velocity) > 0.1) {
+                requestAnimationFrame(applyMomentum);
+            } else {
+                velocity = 0;
+            }
+        }
+    }
+    
+    // Mouse events
+    carouselContainer.addEventListener('mousedown', (e) => {
+        isDown = true;
+        carouselContainer.style.cursor = 'grabbing';
+        startX = e.pageX - carouselContainer.offsetLeft;
+        scrollLeft = carouselContainer.scrollLeft;
+        setScrolling();
+        e.preventDefault();
+    });
+    
+    carouselContainer.addEventListener('mouseleave', () => {
+        isDown = false;
+        carouselContainer.style.cursor = 'grab';
+        if (Math.abs(velocity) > 0.1) {
+            applyMomentum();
+        }
+    });
+    
+    carouselContainer.addEventListener('mouseup', () => {
+        isDown = false;
+        carouselContainer.style.cursor = 'grab';
+        if (Math.abs(velocity) > 0.1) {
+            applyMomentum();
+        }
+    });
+    
+    carouselContainer.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - carouselContainer.offsetLeft;
+        const walk = (x - startX) * 1.5; // Tốc độ scroll
+        const newScrollLeft = constrainScroll(scrollLeft - walk);
+        carouselContainer.scrollLeft = newScrollLeft;
+        updateVelocity();
+        setScrolling();
+    });
+    
+    // Touch events
+    let touchStartX = 0;
+    let touchScrollLeft = 0;
+    
+    carouselContainer.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].pageX - carouselContainer.offsetLeft;
+        touchScrollLeft = carouselContainer.scrollLeft;
+        setScrolling();
+    }, { passive: true });
+    
+    carouselContainer.addEventListener('touchmove', (e) => {
+        const x = e.touches[0].pageX - carouselContainer.offsetLeft;
+        const walk = (x - touchStartX) * 1.5;
+        const newScrollLeft = constrainScroll(touchScrollLeft - walk);
+        carouselContainer.scrollLeft = newScrollLeft;
+        updateVelocity();
+        setScrolling();
+    }, { passive: true });
+    
+    carouselContainer.addEventListener('touchend', () => {
+        if (Math.abs(velocity) > 0.1) {
+            applyMomentum();
+        }
+    }, { passive: true });
+    
+    // Kiểm tra và cập nhật trạng thái nút điều hướng
+    function updateNavButtons() {
+        const limits = getScrollLimits();
+        const currentScroll = carouselContainer.scrollLeft;
+        const threshold = 5; // Ngưỡng để xác định đã đến đầu/cuối
+        
+        if (prevBtn) {
+            if (currentScroll <= limits.min + threshold) {
+                prevBtn.style.opacity = '0.5';
+                prevBtn.style.pointerEvents = 'none';
+            } else {
+                prevBtn.style.opacity = '1';
+                prevBtn.style.pointerEvents = 'auto';
+            }
+        }
+        
+        if (nextBtn) {
+            if (currentScroll >= limits.max - threshold) {
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.pointerEvents = 'none';
+            } else {
+                nextBtn.style.opacity = '1';
+                nextBtn.style.pointerEvents = 'auto';
+            }
+        }
+    }
+    
+    // Scroll event để tính velocity và giới hạn scroll
+    carouselContainer.addEventListener('scroll', () => {
+        const limits = getScrollLimits();
+        const currentScroll = carouselContainer.scrollLeft;
+        
+        // Giới hạn scroll nếu vượt quá
+        if (currentScroll < limits.min) {
+            carouselContainer.scrollLeft = limits.min;
+        } else if (currentScroll > limits.max) {
+            carouselContainer.scrollLeft = limits.max;
+        }
+        
+        updateVelocity();
+        setScrolling();
+        updateNavButtons();
+    }, { passive: true });
+    
+    // Wheel event cho mouse wheel scrolling mượt mà
+    carouselContainer.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) {
+            e.preventDefault();
+            const newScrollLeft = constrainScroll(carouselContainer.scrollLeft + e.deltaX * 0.5);
+            carouselContainer.scrollLeft = newScrollLeft;
+            setScrolling();
+        }
+    }, { passive: false });
+    
+    // Navigation buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const limits = getScrollLimits();
+            const cardWidth = cards[0]?.offsetWidth || 0;
+            const gap = 24;
+            const scrollAmount = cardWidth + gap;
+            const newScrollLeft = constrainScroll(carouselContainer.scrollLeft - scrollAmount);
+            
+            carouselContainer.scrollTo({
+                left: newScrollLeft,
+                behavior: 'smooth'
+            });
+            setScrolling();
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const limits = getScrollLimits();
+            const cardWidth = cards[0]?.offsetWidth || 0;
+            const gap = 24;
+            const scrollAmount = cardWidth + gap;
+            const newScrollLeft = constrainScroll(carouselContainer.scrollLeft + scrollAmount);
+            
+            carouselContainer.scrollTo({
+                left: newScrollLeft,
+                behavior: 'smooth'
+            });
+            setScrolling();
+        });
+    }
+    
+    // Xử lý resize để tính lại limits
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            const limits = getScrollLimits();
+            const currentScroll = carouselContainer.scrollLeft;
+            carouselContainer.scrollLeft = constrainScroll(currentScroll);
+            updateNavButtons();
+        }, 250);
+    });
+    
+    // Khởi tạo trạng thái nút điều hướng
+    updateNavButtons();
+    
+    // Ngăn click khi đang scroll
+    cards.forEach(card => {
+        const link = card.querySelector('.related-card-link');
+        if (link) {
+            link.addEventListener('click', (e) => {
+                if (isScrolling) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+        }
+    });
+})();
+</script>
 

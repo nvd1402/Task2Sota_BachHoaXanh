@@ -50,6 +50,14 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link <?= strpos(basename($_SERVER['PHP_SELF']), 'newsletter') !== false ? 'active' : '' ?>" href="newsletters.php">
+          <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="fas fa-paper-plane text-dark text-sm opacity-10"></i>
+          </div>
+          <span class="nav-link-text ms-1">Newsletter</span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link <?= strpos(basename($_SERVER['PHP_SELF']), 'news') !== false ? 'active' : '' ?>" href="news.php">
           <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
             <i class="fas fa-newspaper text-dark text-sm opacity-10"></i>

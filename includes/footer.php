@@ -21,9 +21,9 @@
             <div class="newsletter-banner">
                 <img src="assets/images/banner_newsletter.png" alt="Nhận khuyến mãi mới">
             </div>
-            <form class="newsletter-form" action="#" method="post">
-                <input type="email" name="email" placeholder="Địa chỉ email (*)" required>
-                <button type="submit">Đăng ký</button>
+            <form class="newsletter-form" id="newsletter-form" method="post">
+                <input type="email" name="email" id="newsletter-email" placeholder="Địa chỉ email (*)" required>
+                <button type="submit" id="newsletter-submit-btn">Đăng ký</button>
             </form>
         </div>
         <div class="newsletter-bg" style="background-image: url('assets/images/thuxu-huong-am-thuc.jpg');"></div>
@@ -144,6 +144,238 @@
     
     <!-- JS tùy chỉnh -->
     <script src="assets/js/main.js"></script>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;"></div>
+
+    <!-- Newsletter Form Handler -->
+    <style>
+    .toast-notification {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .toast-notification::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+    }
+    
+    .toast-notification.success {
+        border-left: 4px solid #28a745;
+    }
+    
+    .toast-notification.success::before {
+        background: #28a745;
+    }
+    
+    .toast-notification.error {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .toast-notification.error::before {
+        background: #dc3545;
+    }
+    
+    .toast-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    
+    .toast-notification.success .toast-icon {
+        color: #28a745;
+    }
+    
+    .toast-notification.error .toast-icon {
+        color: #dc3545;
+    }
+    
+    .toast-content {
+        flex: 1;
+    }
+    
+    .toast-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #333;
+    }
+    
+    .toast-message {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.4;
+    }
+    
+    .toast-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: color 0.2s;
+    }
+    
+    .toast-close:hover {
+        color: #333;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .toast-notification.hiding {
+        animation: slideOutRight 0.3s ease-out forwards;
+    }
+    
+    @media (max-width: 576px) {
+        #toast-container {
+            right: 10px;
+            left: 10px;
+            max-width: none;
+        }
+        
+        .toast-notification {
+            min-width: auto;
+            max-width: none;
+        }
+    }
+    </style>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const newsletterForm = document.getElementById('newsletter-form');
+        const newsletterEmail = document.getElementById('newsletter-email');
+        const newsletterSubmitBtn = document.getElementById('newsletter-submit-btn');
+        
+        if (newsletterForm) {
+            newsletterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = newsletterEmail.value.trim();
+                
+                if (!email) {
+                    showToast('Vui lòng nhập địa chỉ email', 'error');
+                    return;
+                }
+                
+                if (!validateEmail(email)) {
+                    showToast('Địa chỉ email không hợp lệ', 'error');
+                    return;
+                }
+                
+                // Disable button while submitting
+                newsletterSubmitBtn.disabled = true;
+                newsletterSubmitBtn.textContent = 'Đang xử lý...';
+                
+                // Send AJAX request
+                const formData = new FormData();
+                formData.append('email', email);
+                
+                fetch('newsletter_subscribe.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        newsletterEmail.value = '';
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('Có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    newsletterSubmitBtn.disabled = false;
+                    newsletterSubmitBtn.textContent = 'Đăng ký';
+                });
+            });
+        }
+        
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            // Tạo toast element
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            
+            // Icon và nội dung
+            const icon = type === 'success' ? '✓' : '✕';
+            const title = type === 'success' ? 'Thành công!' : 'Lỗi!';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            
+            // Thêm vào container
+            container.appendChild(toast);
+            
+            // Tự động xóa sau 5 giây
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+    });
+    </script>
 </body>
 </html>
 
