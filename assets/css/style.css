@@ -3180,17 +3180,21 @@ body:has(.mobile-menu-sidebar.active) .floating-icons {
 
 /* News detail page - Override Bootstrap to 4 columns layout */
 @media (min-width: 992px) {
-    .container .row {
+    /* Chỉ áp dụng cho news-detail và recruitment-detail, không ảnh hưởng footer */
+    .news-detail-page .container .row,
+    .recruit-detail-page .container .row {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr 1fr;
         gap: 24px;
     }
     
-    .row .col-lg-9 {
+    .news-detail-page .row .col-lg-9,
+    .recruit-detail-page .row .col-lg-9 {
         grid-column: 1 / 4;
     }
     
-    .row .col-lg-3 {
+    .news-detail-page .row .col-lg-3,
+    .recruit-detail-page .row .col-lg-3 {
         grid-column: 4;
     }
 }
